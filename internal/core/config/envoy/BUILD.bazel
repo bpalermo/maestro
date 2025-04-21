@@ -1,0 +1,38 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "envoy",
+    srcs = [
+        "cluster.go",
+        "filter.go",
+        "filterchain.go",
+        "healthcheck.go",
+        "httpfilter.go",
+        "listener.go",
+        "vhost.go",
+    ],
+    importpath = "github.com/bpalermo/maestro/internal/core/config/envoy",
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//internal/util",
+        "@com_github_envoyproxy_go_control_plane_envoy//config/cluster/v3:cluster",
+        "@com_github_envoyproxy_go_control_plane_envoy//config/core/v3:core",
+        "@com_github_envoyproxy_go_control_plane_envoy//config/endpoint/v3:endpoint",
+        "@com_github_envoyproxy_go_control_plane_envoy//config/listener/v3:listener",
+        "@com_github_envoyproxy_go_control_plane_envoy//config/route/v3:route",
+        "@com_github_envoyproxy_go_control_plane_envoy//extensions/filters/http/ext_authz/v3:ext_authz",
+        "@com_github_envoyproxy_go_control_plane_envoy//extensions/filters/http/jwt_authn/v3:jwt_authn",
+        "@com_github_envoyproxy_go_control_plane_envoy//extensions/filters/http/router/v3:router",
+        "@com_github_envoyproxy_go_control_plane_envoy//extensions/filters/network/http_connection_manager/v3:http_connection_manager",
+        "@org_golang_google_protobuf//proto",
+        "@org_golang_google_protobuf//types/known/durationpb",
+        "@org_golang_google_protobuf//types/known/wrapperspb",
+    ],
+)
+
+go_test(
+    name = "envoy_test",
+    srcs = ["filterchain_test.go"],
+    embed = [":envoy"],
+    deps = ["@com_github_stretchr_testify//assert"],
+)

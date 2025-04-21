@@ -1,0 +1,9 @@
+service:
+  name: fake.test.service
+  service_ports:
+    - port: 8080
+      http_health_check:
+        path: /
+    - port: 8081
+      http_health_check:
+        path: /health/

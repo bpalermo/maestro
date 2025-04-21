@@ -1,0 +1,4 @@
+service:
+  name: fake.test.service
+  service_ports:
+    - port: 80

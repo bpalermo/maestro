@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package maestro.config.v1;
+
+message Upstreams {
+
+  message UpstreamService {}
+
+  repeated UpstreamService upstream_services = 1;
+}

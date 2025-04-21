@@ -1,0 +1,7 @@
+service:
+  name: fake.test.service
+  authz: {}
+  service_ports:
+    - port: 8080
+      http_health_check:
+        path: /
