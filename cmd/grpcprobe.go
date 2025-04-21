@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	// StatusConnectionFailure indicates connection failed.
+	// StatusConnectionFailure indicates the connection failed.
 	StatusConnectionFailure = 1
 	// StatusRPCFailure indicates rpc failed.
 	StatusRPCFailure = 2
@@ -55,14 +55,8 @@ var (
 	// grpcProbeCmd represents the grpcprobe command
 	grpcProbeCmd = &cobra.Command{
 		Use:   "grpcprobe",
-		Short: "A brief description of your command",
-		Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-		Run: runGrpcProbeCmd,
+		Short: "Runs a gRPC health check probe",
+		Run:   runGrpcProbeCmd,
 	}
 )
 

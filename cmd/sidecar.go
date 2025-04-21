@@ -28,7 +28,7 @@ var (
 	// sidecarCmd represents the sidecar command
 	sidecarCmd = &cobra.Command{
 		Use:   "sidecar",
-		Short: "Start sidecar mode",
+		Short: "Start maestro in sidecar mode",
 		PreRunE: func(c *cobra.Command, args []string) error {
 			// TODO: setup logging
 			return nil
