@@ -1,15 +1,12 @@
-name: Build
+name: ci
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main
 
 jobs:
-  build:
+  ci:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -20,9 +17,6 @@ jobs:
           bazelisk-cache: true
           disk-cache: ${{ github.workflow }}
           repository-cache: true
-      - name: Build
-        run: |
-          bazel build //...
       - name: Test
         run: |
           bazel test //...
