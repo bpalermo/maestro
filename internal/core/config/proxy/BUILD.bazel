@@ -1,0 +1,45 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "proxy",
+    srcs = [
+        "bootstrap.go",
+        "cluster.go",
+        "vhosts.go",
+    ],
+    importpath = "github.com/bpalermo/maestro/internal/core/config/proxy",
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//api/maestro/config/v1:config_go_proto",
+        "//internal/core/config/envoy",
+        "//internal/util",
+        "//pkg/bootstrap",
+        "//pkg/config/constants",
+        "@com_github_envoyproxy_go_control_plane_envoy//config/bootstrap/v3:bootstrap",
+        "@com_github_envoyproxy_go_control_plane_envoy//config/cluster/v3:cluster",
+        "@com_github_envoyproxy_go_control_plane_envoy//config/core/v3:core",
+        "@com_github_envoyproxy_go_control_plane_envoy//config/listener/v3:listener",
+        "@com_github_envoyproxy_go_control_plane_envoy//config/route/v3:route",
+        "@com_github_envoyproxy_go_control_plane_envoy//extensions/upstreams/http/v3:http",
+        "@com_github_rs_zerolog//log",
+        "@org_golang_google_protobuf//types/known/anypb",
+    ],
+)
+
+go_test(
+    name = "proxy_test",
+    srcs = [
+        "bootstrap_test.go",
+        "vhosts_test.go",
+    ],
+    embed = [":proxy"],
+    deps = [
+        "//api/maestro/config/v1:config_go_proto",
+        "//pkg/bootstrap",
+        "@com_github_envoyproxy_go_control_plane_envoy//config/bootstrap/v3:bootstrap",
+        "@com_github_envoyproxy_go_control_plane_envoy//config/core/v3:core",
+        "@com_github_envoyproxy_go_control_plane_envoy//config/route/v3:route",
+        "@com_github_stretchr_testify//assert",
+        "@org_golang_google_protobuf//proto",
+    ],
+)

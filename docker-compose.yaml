@@ -1,0 +1,55 @@
+services:
+  xds:
+    image: palermo/maestro:latest
+    user: 65532:65532
+    command:
+      - "sidecar"
+      - "--configFile"
+      - "/etc/maestro/sidecar.yaml"
+      - "--outputConfigFile"
+      - "/etc/envoy/envoy.yaml"
+      - "--debug"
+    ports:
+      - "18080:18080"
+      - "8282:8282"
+      - "9191:9191"
+      - "9901:9901"
+    volumes:
+      - ./.container/sidecar.yaml:/etc/maestro/sidecar.yaml
+      - /tmp/envoy:/etc/envoy:rw
+    healthcheck:
+      test: ["CMD", "/maestro", "grpcprobe", "--addr", ":13000"]
+      interval: 10s
+  envoy:
+    image: envoyproxy/envoy:v1.32-latest
+    user: 65532:65532
+    network_mode: service:xds
+    command:
+      - "--service-cluster"
+      - "test"
+      - "--service-node"
+      - "test-01"
+      - "--config-path"
+      - "/etc/envoy/envoy.yaml"
+      - "--log-level"
+      - "warn"
+    volumes:
+      - /tmp/envoy:/etc/envoy:ro
+    depends_on:
+      xds:
+        condition: service_healthy
+      opa:
+        condition: service_started
+  opa:
+    image: openpolicyagent/opa:latest-envoy
+    network_mode: service:xds
+    command:
+      - "run"
+      - "--server"
+      - "--addr=localhost:8181"
+      - "--diagnostic-addr=0.0.0.0:8282"
+      - "--config-file=/run/opa/opa-config.yaml"
+      - "/run/opa/opa-policy.rego"
+    volumes:
+      - .container/opa-config.yaml:/run/opa/opa-config.yaml:ro
+      - .container/opa-policy.rego:/run/opa/opa-policy.rego:ro

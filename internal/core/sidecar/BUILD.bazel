@@ -1,0 +1,22 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "sidecar",
+    srcs = [
+        "callbacks.go",
+        "server.go",
+    ],
+    importpath = "github.com/bpalermo/maestro/internal/core/sidecar",
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//internal/log",
+        "@com_github_envoyproxy_go_control_plane//pkg/cache/v3:cache",
+        "@com_github_envoyproxy_go_control_plane//pkg/server/v3:server",
+        "@com_github_envoyproxy_go_control_plane_envoy//config/core/v3:core",
+        "@com_github_envoyproxy_go_control_plane_envoy//service/discovery/v3:discovery",
+        "@org_golang_google_grpc//:grpc",
+        "@org_golang_google_grpc//health",
+        "@org_golang_google_grpc//health/grpc_health_v1",
+        "@org_uber_go_atomic//:atomic",
+    ],
+)

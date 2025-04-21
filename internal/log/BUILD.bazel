@@ -1,0 +1,9 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "log",
+    srcs = ["logger.go"],
+    importpath = "github.com/bpalermo/maestro/internal/log",
+    visibility = ["//:__subpackages__"],
+    deps = ["@com_github_rs_zerolog//:zerolog"],
+)

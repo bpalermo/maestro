@@ -1,0 +1,9 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "server",
+    srcs = ["shutdown.go"],
+    importpath = "github.com/bpalermo/maestro/internal/core/server",
+    visibility = ["//:__subpackages__"],
+    deps = ["@com_github_rs_zerolog//log"],
+)

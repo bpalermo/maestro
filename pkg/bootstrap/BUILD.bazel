@@ -1,0 +1,14 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "bootstrap",
+    srcs = [
+        "opa.go",
+        "options.go",
+        "spire.go",
+        "xds.go",
+    ],
+    importpath = "github.com/bpalermo/maestro/pkg/bootstrap",
+    visibility = ["//visibility:public"],
+    deps = ["@com_github_envoyproxy_go_control_plane_envoy//config/cluster/v3:cluster"],
+)

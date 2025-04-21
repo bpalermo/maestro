@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package maestro.config.v1;
+
+import "maestro/config/v1/service.proto";
+import "maestro/config/v1/upstream.proto";
+
+message SidecarConfiguration {
+
+  Service service = 1;
+
+  Upstreams upstreams = 2;
+
+}
