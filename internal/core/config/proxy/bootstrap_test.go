@@ -23,6 +23,8 @@ func TestGenerateBootstrapConfiguration(t *testing.T) {
 	}
 
 	bootstrapGen := NewBootstrapGenerator(
+		"fake-cluster",
+		"fake-node",
 		sidecarCfg,
 		bootstrap.NewXdsConfig(),
 		bootstrap.NewOpaConfig(),
@@ -72,6 +74,8 @@ func TestBootstrapGenerator_WriteToFile(t *testing.T) {
 	}
 
 	bootstrapGen := NewBootstrapGenerator(
+		"fake-cluster",
+		"fake-node",
 		sidecarCfg,
 		bootstrap.NewXdsConfig(),
 		bootstrap.NewOpaConfig(),

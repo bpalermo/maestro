@@ -11,7 +11,7 @@ const (
 	inboundHTTPListenerPort    = 18080
 )
 
-func GenerateInboundHTTPListener(enableAuthn bool, authzClusterName string, vhosts []*routev3.VirtualHost) *listenerv3.Listener {
+func GenerateInboundHTTPListener(enableAuthn bool, authzClusterName string, spireDomain string, vhosts []*routev3.VirtualHost) *listenerv3.Listener {
 	return &listenerv3.Listener{
 		Name: "inbound_http",
 		Address: &corev3.Address{
@@ -24,6 +24,6 @@ func GenerateInboundHTTPListener(enableAuthn bool, authzClusterName string, vhos
 				},
 			},
 		},
-		FilterChains: generateInboundHTTPFilterChain(enableAuthn, authzClusterName, vhosts),
+		FilterChains: generateInboundHTTPFilterChain(enableAuthn, authzClusterName, spireDomain, vhosts),
 	}
 }

@@ -8,6 +8,8 @@ services:
       - "/etc/maestro/sidecar.yaml"
       - "--outputConfigFile"
       - "/etc/envoy/envoy.yaml"
+      - "--spireDomain"
+      - ""
       - "--debug"
     ports:
       - "18080:18080"

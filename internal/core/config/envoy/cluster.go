@@ -6,10 +6,6 @@ import (
 	endpointv3 "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 )
 
-var (
-	defaultUDSMode = 0o777
-)
-
 func LocalCluster(name string, address string, port uint32, hcPort *uint32) *clusterv3.Cluster {
 	c := cluster(name, clusterv3.Cluster_STATIC)
 
@@ -49,12 +45,8 @@ func LocalCluster(name string, address string, port uint32, hcPort *uint32) *clu
 	return c
 }
 
-func LocalUDSCluster(name string, path string, mode *int) *clusterv3.Cluster {
+func LocalUDSCluster(name string, path string) *clusterv3.Cluster {
 	c := cluster(name, clusterv3.Cluster_STATIC)
-
-	if mode == nil {
-		mode = &defaultUDSMode
-	}
 
 	c.LoadAssignment = &endpointv3.ClusterLoadAssignment{
 		ClusterName: name,
@@ -68,7 +60,6 @@ func LocalUDSCluster(name string, path string, mode *int) *clusterv3.Cluster {
 									Address: &corev3.Address_Pipe{
 										Pipe: &corev3.Pipe{
 											Path: path,
-											Mode: uint32(*mode),
 										},
 									},
 								},
