@@ -24,14 +24,19 @@ const (
 )
 
 type BootstrapGenerator struct {
+	node        *corev3.Node
 	sidecarCfg  *configV1.SidecarConfiguration
 	xdsConfig   *bootstrap.XdsConfig
 	opaConfig   *bootstrap.OpaConfig
 	spireConfig *bootstrap.SpireConfig
 }
 
-func NewBootstrapGenerator(sidecarCfg *configV1.SidecarConfiguration, xdsCfg *bootstrap.XdsConfig, opaCfg *bootstrap.OpaConfig, spireCfg *bootstrap.SpireConfig) *BootstrapGenerator {
+func NewBootstrapGenerator(serviceCluster string, serviceNode string, sidecarCfg *configV1.SidecarConfiguration, xdsCfg *bootstrap.XdsConfig, opaCfg *bootstrap.OpaConfig, spireCfg *bootstrap.SpireConfig) *BootstrapGenerator {
 	return &BootstrapGenerator{
+		&corev3.Node{
+			Id:      serviceNode,
+			Cluster: serviceCluster,
+		},
 		sidecarCfg,
 		xdsCfg,
 		opaCfg,
@@ -43,6 +48,7 @@ func (g *BootstrapGenerator) generateBootstrapConfiguration() *bootstrapv3.Boots
 	svc := g.sidecarCfg.Service
 
 	return &bootstrapv3.Bootstrap{
+		Node:             g.node,
 		Admin:            g.generateAdminResource(),
 		StaticResources:  g.generateStaticResource(svc),
 		DynamicResources: g.generateDynamicResource(),
@@ -84,7 +90,7 @@ func (g *BootstrapGenerator) generateStaticListeners(svc *configV1.Service) []*l
 
 	vhosts := generateVHosts(svc.Name, servicePorts)
 
-	listeners = append(listeners, envoy.GenerateInboundHTTPListener(enableAuthn, authzClusterName, vhosts))
+	listeners = append(listeners, envoy.GenerateInboundHTTPListener(enableAuthn, authzClusterName, g.spireConfig.Domain, vhosts))
 
 	return listeners
 }
@@ -114,8 +120,11 @@ func (g *BootstrapGenerator) generateStaticClusters(svc *configV1.Service) []*cl
 	clusters := make([]*clusterv3.Cluster, 0)
 
 	clusters = append(clusters, g.xdsLocalCluster())
-	clusters = append(clusters, g.spireLocalCluster())
 	clusters = append(clusters, g.opaLocalCluster())
+
+	if g.spireConfig.Enabled {
+		clusters = append(clusters, g.spireLocalCluster())
+	}
 
 	for _, svcPort := range svc.ServicePorts {
 		clusters = append(clusters, g.svcLocalCluster(svcPort.Port))

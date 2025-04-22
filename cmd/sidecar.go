@@ -13,7 +13,11 @@ import (
 )
 
 var (
-	logger      *log.Logger
+	logger *log.Logger
+
+	serviceCluster string
+	serviceNode    string
+
 	sidecarArgs *bootstrap.SidecarArgs
 	sidecarCfg  = config.NewSidecarConfig()
 
@@ -40,20 +44,26 @@ var (
 func init() {
 	rootCmd.AddCommand(sidecarCmd)
 
+	sidecarCmd.Flags().StringVar(&serviceCluster, "serviceCluster", "", "envoy service cluster name")
+	_ = sidecarCmd.MarkFlagRequired("serviceCluster")
+	sidecarCmd.Flags().StringVar(&serviceNode, "serviceNode", "", "envoy service node id")
+	_ = sidecarCmd.MarkFlagRequired("serviceNode")
+
 	sidecarArgs = bootstrap.NewSidecarArgs()
 
+	// Sidecar
 	sidecarCmd.Flags().VarP(sidecarCfg, "config", "c", "sidecar configuration")
 	sidecarCmd.Flags().StringVarP(&sidecarArgs.CfgFilename, "configFile", "f", "", "sidecar configuration file")
+	sidecarCmd.Flags().StringVarP(&sidecarArgs.EnvoyConfigFilename, "outputConfigFile", "o", "", "envoy configuration file to write to")
+	sidecarCmd.MarkFlagsOneRequired("config", "configFile")
+	sidecarCmd.MarkFlagsMutuallyExclusive("config", "configFile")
 
 	// xDS
 	sidecarCmd.Flags().StringVar(&xdsCfg.Address, "xdsClusterAddress", "127.0.0.1", "xDS cluster address")
 	sidecarCmd.Flags().Uint32Var(&xdsCfg.Port, "xdsClusterPort", 13000, "xDS cluster port")
-	sidecarCmd.Flags().BoolVar(&xdsStrictDNSDiscovery, "xdsClusterDNSDiscovery", false, "xDS cluster STRICT_DNS discovery")
 
-	sidecarCmd.MarkFlagsOneRequired("config", "configFile")
-	sidecarCmd.MarkFlagsMutuallyExclusive("config", "configFile")
-
-	sidecarCmd.Flags().StringVarP(&sidecarArgs.EnvoyConfigFilename, "outputConfigFile", "o", "", "envoy configuration file to write to")
+	// Spire
+	sidecarCmd.Flags().StringVar(&spireCfg.Domain, "spireDomain", "cluster.local", "SPIRE domain")
 }
 
 func runSidecarCmd(c *cobra.Command, _ []string) {
@@ -61,10 +71,6 @@ func runSidecarCmd(c *cobra.Command, _ []string) {
 
 	debug, _ := c.Flags().GetBool(debugModeFlagName)
 	logger = log.NewLogger(debug)
-
-	if xdsStrictDNSDiscovery {
-		xdsCfg.SetStrictDNSDiscovery()
-	}
 
 	logger.Info().Msg("starting in sidecar mode")
 
@@ -76,6 +82,8 @@ func runSidecarCmd(c *cobra.Command, _ []string) {
 	}
 
 	bootstrapGenerator = proxy.NewBootstrapGenerator(
+		serviceCluster,
+		serviceNode,
 		sidecarCfg.GetConfig(),
 		xdsCfg,
 		opaCfg,

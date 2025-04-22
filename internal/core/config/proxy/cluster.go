@@ -35,10 +35,6 @@ func (g *BootstrapGenerator) svcLocalCluster(port uint32) *clusterv3.Cluster {
 func (g *BootstrapGenerator) xdsLocalCluster() *clusterv3.Cluster {
 	c := envoy.LocalCluster(constants.ClusterNameLocalXDS.ToString(), g.xdsConfig.Address, g.xdsConfig.Port, nil)
 
-	c.ClusterDiscoveryType = &clusterv3.Cluster_Type{
-		Type: g.xdsConfig.DiscoveryType,
-	}
-
 	c.HealthChecks = []*corev3.HealthCheck{
 		envoy.GrpcHealthCheck(""),
 	}
@@ -81,7 +77,7 @@ func (g *BootstrapGenerator) opaLocalCluster() *clusterv3.Cluster {
 }
 
 func (g *BootstrapGenerator) spireLocalCluster() *clusterv3.Cluster {
-	c := envoy.LocalUDSCluster(constants.ClusterNameLocalSDS.ToString(), "/tmp/sds/spire.socket", nil)
+	c := envoy.LocalUDSCluster(constants.ClusterNameLocalSpire.ToString(), g.spireConfig.Path)
 
 	c.TypedExtensionProtocolOptions = map[string]*anypb.Any{
 		"envoy.extensions.upstreams.http.v3.HttpProtocolOptions": util.MustAny(
