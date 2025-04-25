@@ -3,6 +3,7 @@ load("@rules_go//go:def.bzl", "go_library")
 go_library(
     name = "cmd",
     srcs = [
+        "controller.go",
         "grpcprobe.go",
         "root.go",
         "server.go",

@@ -19,6 +19,11 @@ proto_library(
 
 go_proto_library(
     name = "config_go_proto",
+    compilers = [
+        "@rules_go//proto:go_proto",
+        "//bazel/go:go_deepcopy",
+        "//bazel/go:go_json",
+    ],
     importpath = "github.com/bpalermo/maestro/config/v1",
     proto = ":config_proto",
     visibility = ["//visibility:public"],

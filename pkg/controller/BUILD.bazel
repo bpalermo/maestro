@@ -1,0 +1,21 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "controller",
+    srcs = ["controller.go"],
+    importpath = "github.com/bpalermo/maestro/pkg/controller",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@io_k8s_apimachinery//pkg/api/errors",
+        "@io_k8s_apimachinery//pkg/apis/meta/v1:meta",
+        "@io_k8s_apimachinery//pkg/util/runtime",
+        "@io_k8s_apimachinery//pkg/util/wait",
+        "@io_k8s_client_go//informers",
+        "@io_k8s_client_go//kubernetes",
+        "@io_k8s_client_go//kubernetes/scheme",
+        "@io_k8s_client_go//listers/apps/v1:apps",
+        "@io_k8s_client_go//tools/cache",
+        "@io_k8s_client_go//tools/record",
+        "@io_k8s_client_go//util/workqueue",
+    ],
+)

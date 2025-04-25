@@ -1,0 +1,19 @@
+load("@rules_go//proto:compiler.bzl", "go_proto_compiler")
+
+go_proto_compiler(
+    name = "go_deepcopy",
+    plugin = "@io_istio_tools//cmd/protoc-gen-golang-deepcopy",
+    suffix = "_deepcopy.gen.go",
+    visibility = ["//visibility:public"],
+    deps = ["@org_golang_google_protobuf//proto"],
+)
+
+go_proto_compiler(
+    name = "go_json",
+    plugin = "@io_istio_tools//cmd/protoc-gen-golang-jsonshim",
+    suffix = "_json.gen.go",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@com_github_golang_protobuf//jsonpb",
+    ],
+)
