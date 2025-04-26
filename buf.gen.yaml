@@ -1,0 +1,15 @@
+version: v2
+plugins:
+  - remote: buf.build/protocolbuffers/go
+    out: ./api
+    opt: paths=source_relative
+  ## go install istio.io/tools/cmd/protoc-gen-golang-deepcopy
+  - local: protoc-gen-golang-deepcopy
+    out: ./api
+    opt: paths=source_relative
+  ## go install istio.io/tools/cmd/protoc-gen-golang-jsonshim
+  - local: protoc-gen-golang-jsonshim
+    out: ./api
+    opt: paths=source_relative
+inputs:
+  - directory: api
