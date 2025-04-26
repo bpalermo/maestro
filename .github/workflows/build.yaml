@@ -17,7 +17,7 @@ jobs:
   build:
     name: ${{ matrix.os }}
     environment:
-      name: ${{ github.event.pull_request.merged && github.event.pull_request.base.ref || 'pr' }}
+      name: ${{ github.event_name != 'pull_request' && github.event.pull_request.base.ref || 'pr' }}
     strategy:
       fail-fast: false
       matrix:
@@ -67,7 +67,7 @@ jobs:
   merge:
     runs-on: ubuntu-latest
     environment:
-      name: ${{ github.event.pull_request.merged && github.event.pull_request.base.ref || 'pr' }}
+      name: ${{ github.event_name != 'pull_request' && github.event.pull_request.base.ref || 'pr' }}
     needs:
       - build
     steps:
@@ -94,7 +94,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY_IMAGE }}
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest,enable={{ is_default_branch }}
             type=sha,format=long,prefix=
 
       - name: Create manifest list and push
