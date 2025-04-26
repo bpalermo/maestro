@@ -16,6 +16,8 @@ permissions: read-all
 jobs:
   build:
     name: ${{ matrix.os }}
+    environment:
+      name: ${{ github.event.pull_request.merged && github.event.pull_request.base.ref || 'pr' }}
     strategy:
       fail-fast: false
       matrix:
@@ -65,7 +67,7 @@ jobs:
   merge:
     runs-on: ubuntu-latest
     environment:
-      name: ${{ github.ref_name }}
+      name: ${{ github.event.pull_request.merged && github.event.pull_request.base.ref || 'pr' }}
     needs:
       - build
     steps:
