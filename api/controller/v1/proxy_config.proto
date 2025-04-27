@@ -2,6 +2,10 @@ syntax = "proto3";
 
 package controller.v1;
 
+import "config/v1/service.proto";
+
 option go_package = "github.com/bpalermo/maestro/api/controller/v1;controllerv1";
 
-message ProxyConfig {}
+message ProxyConfig {
+  config.v1.Service service = 1;
+}

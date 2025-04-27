@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package config.v1;
+
+import "buf/validate/validate.proto";
+import "config/v1/authn.proto";
+import "config/v1/authz.proto";
+import "config/v1/cors.proto";
+
+option go_package = "github.com/bpalermo/maestro/api/config/v1;configv1";
+
+message Service {
+  string name = 1 [
+    // Required: minimum length of one.
+    (buf.validate.field).string.min_len = 1,
+
+    // The value must be a validate hostname.
+    (buf.validate.field).cel = {
+      id: "hostname.ishostname"
+      message: "service name must be a valid hostname"
+      expression: "this.isHostname()"
+    },
+
+    // Reject "localhost" as invalid.
+    (buf.validate.field).cel = {
+      id: "hostname.notlocalhost"
+      message: "service name connot be localhost"
+      expression: "this != 'localhost'"
+    }
+  ];
+
+  message ServicePort {
+    uint32 port = 1 [(buf.validate.field).uint32.gt = 1024];
+
+    message HttpHealthCheck {
+      string path = 1;
+    }
+
+    oneof health_check_specifier {
+      option (buf.validate.oneof).required = true;
+      HttpHealthCheck http_health_check = 2;
+    }
+  }
+
+  repeated ServicePort service_ports = 2 [(buf.validate.field).repeated.min_items = 1];
+
+  AuthN authn = 3;
+
+  AuthZ authz = 4;
+
+  CORS cors = 5;
+}

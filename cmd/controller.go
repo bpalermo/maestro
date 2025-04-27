@@ -35,9 +35,10 @@ func init() {
 	controllerCmd.Flags().StringVar(&kubeconfig, "kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
 
 	controllerCmd.Flags().StringVar(&controllerArgs.ConfigMapPrefix, "configMapPrefix", "proxy-config-", "Prefix for proxy config config maps")
+	controllerCmd.Flags().StringVar(&controllerArgs.Spire.TrustDomain, "spireTrustDomain", "cluster.local", "Spire SPIFFE trust domain")
 }
 
-func runController(cmd *cobra.Command, args []string) error {
+func runController(_ *cobra.Command, _ []string) error {
 	// set up signals so we handle the shutdown signal gracefully
 	ctx := signals.SetupSignalHandler()
 	logger := klog.FromContext(ctx)
@@ -74,6 +75,7 @@ func runController(cmd *cobra.Command, args []string) error {
 		maestroClient,
 		kubeInformerFactory.Core().V1().ConfigMaps(),
 		maestroInformerFactory.Maestro().V1().ProxyConfigs(),
+		controllerArgs.Spire.TrustDomain,
 		opts...,
 	)
 

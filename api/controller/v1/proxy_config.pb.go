@@ -7,6 +7,7 @@
 package controllerv1
 
 import (
+	v1 "github.com/bpalermo/maestro/api/config/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -23,6 +24,7 @@ const (
 
 type ProxyConfig struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	Service       *v1.Service            `protobuf:"bytes,1,opt,name=service,proto3" json:"service,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -57,12 +59,21 @@ func (*ProxyConfig) Descriptor() ([]byte, []int) {
 	return file_controller_v1_proxy_config_proto_rawDescGZIP(), []int{0}
 }
 
+func (x *ProxyConfig) GetService() *v1.Service {
+	if x != nil {
+		return x.Service
+	}
+	return nil
+}
+
 var File_controller_v1_proxy_config_proto protoreflect.FileDescriptor
 
 const file_controller_v1_proxy_config_proto_rawDesc = "" +
 	"\n" +
-	" controller/v1/proxy_config.proto\x12\rcontroller.v1\"\r\n" +
-	"\vProxyConfigB<Z:github.com/bpalermo/maestro/api/controller/v1;controllerv1b\x06proto3"
+	" controller/v1/proxy_config.proto\x12\rcontroller.v1\x1a\x17config/v1/service.proto\";\n" +
+	"\vProxyConfig\x12,\n" +
+	"\aservice\x18\x01 \x01(\v2\x12.config.v1.ServiceR\aserviceB\xb6\x01\n" +
+	"\x11com.controller.v1B\x10ProxyConfigProtoP\x01Z:github.com/bpalermo/maestro/api/controller/v1;controllerv1\xa2\x02\x03CXX\xaa\x02\rController.V1\xca\x02\rController\\V1\xe2\x02\x19Controller\\V1\\GPBMetadata\xea\x02\x0eController::V1b\x06proto3"
 
 var (
 	file_controller_v1_proxy_config_proto_rawDescOnce sync.Once
@@ -79,13 +90,15 @@ func file_controller_v1_proxy_config_proto_rawDescGZIP() []byte {
 var file_controller_v1_proxy_config_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_controller_v1_proxy_config_proto_goTypes = []any{
 	(*ProxyConfig)(nil), // 0: controller.v1.ProxyConfig
+	(*v1.Service)(nil),  // 1: config.v1.Service
 }
 var file_controller_v1_proxy_config_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	1, // 0: controller.v1.ProxyConfig.service:type_name -> config.v1.Service
+	1, // [1:1] is the sub-list for method output_type
+	1, // [1:1] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_controller_v1_proxy_config_proto_init() }
