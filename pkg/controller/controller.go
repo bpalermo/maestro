@@ -272,8 +272,9 @@ func (c *MaestroController) syncHandler(ctx context.Context, objectRef cache.Obj
 		return nil
 	}
 
-	// Get the config map with the name specified in ProxyConfig.spec
-	configMap, err := c.configMapsLister.ConfigMaps(proxyConfig.Namespace).Get(proxyConfigName)
+	// Get the config map with the expected name
+	proxyConfigConfigMapName := c.configMapName(proxyConfig.Name)
+	configMap, err := c.configMapsLister.ConfigMaps(proxyConfig.Namespace).Get(proxyConfigConfigMapName)
 	// If the resource doesn't exist, we'll create it
 	if errors.IsNotFound(err) {
 		configMap, err = c.kubeClientSet.CoreV1().ConfigMaps(proxyConfig.Namespace).Create(ctx, c.newConfigMap(proxyConfig), metav1.CreateOptions{FieldManager: FieldManager})
@@ -385,7 +386,7 @@ func (c *MaestroController) newConfigMap(proxyConfig *maestrov1.ProxyConfig) *co
 	}
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("%s%s", c.configMapPrefix, proxyConfig.Name),
+			Name:      c.configMapName(proxyConfig.Name),
 			Namespace: proxyConfig.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(proxyConfig, maestrov1.SchemeGroupVersion.WithKind("ProxyConfig")),
@@ -396,4 +397,8 @@ func (c *MaestroController) newConfigMap(proxyConfig *maestrov1.ProxyConfig) *co
 			"envoy.yaml": envoy.GenerateBootstrap(proxyConfig),
 		},
 	}
+}
+
+func (c *MaestroController) configMapName(proxyConfigName string) string {
+	return fmt.Sprintf("%s%s", c.configMapPrefix, proxyConfigName)
 }
