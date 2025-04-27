@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/bpalermo/maestro/internal/proxy"
@@ -289,7 +290,7 @@ func (c *MaestroController) syncHandler(ctx context.Context, objectRef cache.Obj
 	configMap, err := c.configMapsLister.ConfigMaps(proxyConfig.Namespace).Get(proxyConfigConfigMapName)
 	// If the resource doesn't exist, we'll create it
 	if errors.IsNotFound(err) {
-		configMap, err = c.kubeClientSet.CoreV1().ConfigMaps(proxyConfig.Namespace).Create(ctx, c.newConfigMap(proxyConfig), metav1.CreateOptions{FieldManager: FieldManager})
+		configMap, err = c.kubeClientSet.CoreV1().ConfigMaps(proxyConfig.Namespace).Create(ctx, c.newProxyConfigConfigMap(proxyConfig), metav1.CreateOptions{FieldManager: FieldManager})
 	}
 
 	// If an error occurs during Get/Create, we'll requeue the item so we can
@@ -307,6 +308,17 @@ func (c *MaestroController) syncHandler(ctx context.Context, objectRef cache.Obj
 		return fmt.Errorf("%s", msg)
 	}
 
+	if data := c.generateProxyConfigConfigMapData(proxyConfig); !reflect.DeepEqual(configMap.Data, data) {
+		configMap, err = c.updateProxyConfigMapData(ctx, proxyConfig, configMap)
+	}
+
+	// If an error occurs during updating, we'll requeue the item so we can
+	// attempt processing again later. This could have been caused by a
+	// temporary network failure, or, any other transient reason.
+	if err != nil {
+		return err
+	}
+
 	// Finally, we update the status block of the ProxyConfig resource to reflect the
 	// current state of the world
 	err = c.updateProxyConfigStatus(ctx, proxyConfig, configMap)
@@ -316,6 +328,15 @@ func (c *MaestroController) syncHandler(ctx context.Context, objectRef cache.Obj
 
 	c.recorder.Event(proxyConfig, corev1.EventTypeNormal, SuccessSynced, MessageResourceSynced)
 	return nil
+}
+
+func (c *MaestroController) updateProxyConfigMapData(ctx context.Context, proxyConfig *maestrov1.ProxyConfig, configMap *corev1.ConfigMap) (*corev1.ConfigMap, error) {
+	// NEVER modify objects from the store. It's a read-only, local cache.
+	// You can use DeepCopy() to make a deep copy of the original object and modify this copy
+	// Or create a copy manually for better performance
+	configMapCopy := configMap.DeepCopy()
+	configMapCopy.Data = c.generateProxyConfigConfigMapData(proxyConfig)
+	return c.kubeClientSet.CoreV1().ConfigMaps(configMap.Namespace).Update(ctx, configMapCopy, metav1.UpdateOptions{FieldManager: FieldManager})
 }
 
 func (c *MaestroController) updateProxyConfigStatus(ctx context.Context, proxyConfig *maestrov1.ProxyConfig, configMap *corev1.ConfigMap) error {
@@ -389,10 +410,10 @@ func (c *MaestroController) handleObject(obj interface{}) {
 	}
 }
 
-// newConfigMap creates a new ConfigMap for a ProxyConfig resource. It also sets
+// newProxyConfigConfigMap creates a new ConfigMap for a ProxyConfig resource. It also sets
 // the appropriate OwnerReferences on the resource so handleObject can discover
 // the ProxyConfig resource that 'owns' it.
-func (c *MaestroController) newConfigMap(proxyConfig *maestrov1.ProxyConfig) *corev1.ConfigMap {
+func (c *MaestroController) newProxyConfigConfigMap(proxyConfig *maestrov1.ProxyConfig) *corev1.ConfigMap {
 	labels := map[string]string{
 		"controller": controllerAgentName,
 	}
@@ -405,9 +426,13 @@ func (c *MaestroController) newConfigMap(proxyConfig *maestrov1.ProxyConfig) *co
 			},
 			Labels: labels,
 		},
-		Data: map[string]string{
-			"envoy.yaml": proxy.GenerateBootstrap(proxyConfig, c.spiffeDomain),
-		},
+		Data: c.generateProxyConfigConfigMapData(proxyConfig),
+	}
+}
+
+func (c *MaestroController) generateProxyConfigConfigMapData(proxyConfig *maestrov1.ProxyConfig) map[string]string {
+	return map[string]string{
+		"envoy.yaml": proxy.GenerateBootstrap(proxyConfig, c.spiffeDomain),
 	}
 }
 
