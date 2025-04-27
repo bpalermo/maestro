@@ -219,7 +219,7 @@ func (c *MaestroController) runWorker(ctx context.Context) {
 }
 
 // processNextWorkItem will read a single work item off the workqueue and
-// attempt to process it, by calling the syncHandler.
+// attempt to process it by calling the syncHandler.
 func (c *MaestroController) processNextWorkItem(ctx context.Context) bool {
 	objRef, shutdown := c.workqueue.Get()
 	logger := klog.FromContext(ctx)
@@ -232,7 +232,7 @@ func (c *MaestroController) processNextWorkItem(ctx context.Context) bool {
 	// finished processing this item. We also must remember to call Forget
 	// if we do not want this work item being re-queued. For example, we do
 	// not call Forget if a transient error occurs, instead the item is
-	// put back on the workqueue and attempted again after a back-off
+	// put back in the workqueue and attempted again after a back-off
 	// period.
 	defer c.workqueue.Done(objRef)
 
