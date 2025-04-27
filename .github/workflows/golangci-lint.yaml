@@ -1,4 +1,4 @@
-name: ci
+name: golangci-lint
 
 on:
   pull_request:
@@ -8,11 +8,11 @@ on:
 permissions: {}
 
 jobs:
-  lint:
-    name: ci
+  golangci:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      pull-requests: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -20,11 +20,9 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - name: Verify dependencies
-        run: go mod verify
-      - name: Build
-        run: go build -v ./...
-      - name: Run go vet
-        run: go vet ./...
-      - name: Run tests
-        run: go test -race -vet=off ./...
+      - name: Lint
+        uses: golangci/golangci-lint-action@v7
+        with:
+          version: v2.0
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          only-new-issues: true
