@@ -17,7 +17,7 @@ jobs:
   build:
     name: ${{ matrix.os }}
     environment:
-      name: ${{ github.event_name != 'pull_request' && github.event.pull_request.base.ref || 'pr' }}
+      name: ${{ github.ref == 'refs/heads/main' && 'main' ||  'pr' }}
     strategy:
       fail-fast: false
       matrix:
