@@ -1,4 +1,4 @@
-package controllers
+package controller
 
 import (
 	"context"
@@ -45,7 +45,20 @@ const (
 	MessageResourceSynced = "ProxyConfig synced successfully"
 	// FieldManager distinguishes this controller from other things writing to API objects
 	FieldManager = controllerAgentName
+
+	defaultConfigMapPrefix = "proxy-config-"
 )
+
+type MaestroControllerArgs struct {
+	ConfigMapPrefix string
+}
+
+func NewControllerArgs() *MaestroControllerArgs {
+	return &MaestroControllerArgs{}
+}
+
+// MaestroControllerOption is a functional option type that allows us to configure the Controller.
+type MaestroControllerOption func(*MaestroController)
 
 type MaestroController struct {
 	// kubeClientSet is a standard kubernetes client set
@@ -67,6 +80,9 @@ type MaestroController struct {
 	// recorder is an event recorder for recording Event resources to the
 	// Kubernetes API.
 	recorder record.EventRecorder
+
+	// configMapPrefix is the prefix used for the ConfigMap resources created by this controller.
+	configMapPrefix string
 }
 
 // NewMaestroController returns a new sample controller
@@ -75,7 +91,8 @@ func NewMaestroController(
 	kubeClientSet kubernetes.Interface,
 	maestroClientSet clientset.Interface,
 	configMapInformer coreinformers.ConfigMapInformer,
-	proxyConfigInformer informers.ProxyConfigInformer) *MaestroController {
+	proxyConfigInformer informers.ProxyConfigInformer,
+	options ...MaestroControllerOption) *MaestroController {
 	logger := klog.FromContext(ctx)
 
 	// Create an event broadcaster
@@ -102,6 +119,12 @@ func NewMaestroController(
 		proxyConfigsSynced: proxyConfigInformer.Informer().HasSynced,
 		workqueue:          workqueue.NewTypedRateLimitingQueue(ratelimiter),
 		recorder:           recorder,
+		configMapPrefix:    defaultConfigMapPrefix,
+	}
+
+	// Apply all the functional options to configure the controller.
+	for _, opt := range options {
+		opt(controller)
 	}
 
 	logger.Info("Setting up event handlers")
@@ -134,6 +157,13 @@ func NewMaestroController(
 	})
 
 	return controller
+}
+
+// WithConfigMapPrefix is a functional option to set the config map prefix.
+func WithConfigMapPrefix(prefix string) MaestroControllerOption {
+	return func(c *MaestroController) {
+		c.configMapPrefix = prefix
+	}
 }
 
 // Run will set up the event handlers for types we are interested in, as well
@@ -246,7 +276,7 @@ func (c *MaestroController) syncHandler(ctx context.Context, objectRef cache.Obj
 	configMap, err := c.configMapsLister.ConfigMaps(proxyConfig.Namespace).Get(proxyConfigName)
 	// If the resource doesn't exist, we'll create it
 	if errors.IsNotFound(err) {
-		configMap, err = c.kubeClientSet.CoreV1().ConfigMaps(proxyConfig.Namespace).Create(ctx, newConfigMap(proxyConfig), metav1.CreateOptions{FieldManager: FieldManager})
+		configMap, err = c.kubeClientSet.CoreV1().ConfigMaps(proxyConfig.Namespace).Create(ctx, c.newConfigMap(proxyConfig), metav1.CreateOptions{FieldManager: FieldManager})
 	}
 
 	// If an error occurs during Get/Create, we'll requeue the item so we can
@@ -349,13 +379,13 @@ func (c *MaestroController) handleObject(obj interface{}) {
 // newConfigMap creates a new ConfigMap for a ProxyConfig resource. It also sets
 // the appropriate OwnerReferences on the resource so handleObject can discover
 // the ProxyConfig resource that 'owns' it.
-func newConfigMap(proxyConfig *maestrov1.ProxyConfig) *corev1.ConfigMap {
+func (c *MaestroController) newConfigMap(proxyConfig *maestrov1.ProxyConfig) *corev1.ConfigMap {
 	labels := map[string]string{
-		"controller": proxyConfig.Name,
+		"controller": controllerAgentName,
 	}
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      proxyConfig.Name,
+			Name:      fmt.Sprintf("%s%s", c.configMapPrefix, proxyConfig.Name),
 			Namespace: proxyConfig.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(proxyConfig, maestrov1.SchemeGroupVersion.WithKind("ProxyConfig")),
