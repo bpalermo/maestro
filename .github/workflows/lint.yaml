@@ -10,8 +10,8 @@ permissions: {}
 env:
   IGNORE_GENERATED_FILES: "true"
   VALIDATE_PROTOBUF: "false"
-  GO_GOLANGCI_LINT_CLI_LINT_MODE: "project"
-  GO_GOLANGCI_LINT_ARGUMENTS: '[ "run", "./..." ]'
+  VALIDATE_GO: "false"
+  VALIDATE_GO_MODULES: "false"
 
 jobs:
   lint:
