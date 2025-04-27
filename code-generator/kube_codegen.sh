@@ -75,26 +75,26 @@ function kube::codegen::gen_helpers() {
 
     while [ "$#" -gt 0 ]; do
         case "$1" in
-            "--boilerplate")
-                boilerplate="$2"
-                shift 2
-                ;;
-            "--extra-peer-dir")
-                extra_peers+=("$2")
-                shift 2
-                ;;
-            *)
-                if [[ "$1" =~ ^-- ]]; then
-                    echo "unknown argument: $1" >&2
-                    return 1
-                fi
-                if [ -n "$in_dir" ]; then
-                    echo "too many arguments: $1 (already have $in_dir)" >&2
-                    return 1
-                fi
-                in_dir="$1"
-                shift
-                ;;
+        "--boilerplate")
+            boilerplate="$2"
+            shift 2
+            ;;
+        "--extra-peer-dir")
+            extra_peers+=("$2")
+            shift 2
+            ;;
+        *)
+            if [[ "$1" =~ ^-- ]]; then
+                echo "unknown argument: $1" >&2
+                return 1
+            fi
+            if [ -n "$in_dir" ]; then
+                echo "too many arguments: $1 (already have $in_dir)" >&2
+                return 1
+            fi
+            in_dir="$1"
+            shift
+            ;;
         esac
     done
 
@@ -126,13 +126,14 @@ function kube::codegen::gen_helpers() {
         pkg="$(cd "${dir}" && GO111MODULE=on go list -find .)"
         input_pkgs+=("${pkg}")
     done < <(
-        ( kube::codegen::internal::grep -l --null \
-            -e '^\s*//\s*+k8s:deepcopy-gen=' \
-            -r "${in_dir}" \
-            --include '*.go' \
-            || true \
-        ) | while read -r -d $'\0' F; do dirname "${F}"; done \
-          | LC_ALL=C sort -u
+        (
+            kube::codegen::internal::grep -l --null \
+                -e '^\s*//\s*+k8s:deepcopy-gen=' \
+                -r "${in_dir}" \
+                --include '*.go' ||
+                true
+        ) | while read -r -d $'\0' F; do dirname "${F}"; done |
+            LC_ALL=C sort -u
     )
 
     if [ "${#input_pkgs[@]}" != 0 ]; then
@@ -141,8 +142,8 @@ function kube::codegen::gen_helpers() {
         kube::codegen::internal::findz \
             "${in_dir}" \
             -type f \
-            -name zz_generated.deepcopy.go \
-            | xargs -0 rm -f
+            -name zz_generated.deepcopy.go |
+            xargs -0 rm -f
 
         "${gobin}/deepcopy-gen" \
             -v "${v}" \
@@ -158,13 +159,14 @@ function kube::codegen::gen_helpers() {
         pkg="$(cd "${dir}" && GO111MODULE=on go list -find .)"
         input_pkgs+=("${pkg}")
     done < <(
-        ( kube::codegen::internal::grep -l --null \
-            -e '^\s*//\s*+k8s:validation-gen=' \
-            -r "${in_dir}" \
-            --include '*.go' \
-            || true \
-        ) | while read -r -d $'\0' F; do dirname "${F}"; done \
-          | LC_ALL=C sort -u
+        (
+            kube::codegen::internal::grep -l --null \
+                -e '^\s*//\s*+k8s:validation-gen=' \
+                -r "${in_dir}" \
+                --include '*.go' ||
+                true
+        ) | while read -r -d $'\0' F; do dirname "${F}"; done |
+            LC_ALL=C sort -u
     )
 
     if [ "${#input_pkgs[@]}" != 0 ]; then
@@ -173,8 +175,8 @@ function kube::codegen::gen_helpers() {
         kube::codegen::internal::findz \
             "${in_dir}" \
             -type f \
-            -name zz_generated.validations.go \
-            | xargs -0 rm -f
+            -name zz_generated.validations.go |
+            xargs -0 rm -f
 
         "${gobin}/validation-gen" \
             -v "${v}" \
@@ -190,13 +192,14 @@ function kube::codegen::gen_helpers() {
         pkg="$(cd "${dir}" && GO111MODULE=on go list -find .)"
         input_pkgs+=("${pkg}")
     done < <(
-        ( kube::codegen::internal::grep -l --null \
-            -e '^\s*//\s*+k8s:defaulter-gen=' \
-            -r "${in_dir}" \
-            --include '*.go' \
-            || true \
-        ) | while read -r -d $'\0' F; do dirname "${F}"; done \
-          | LC_ALL=C sort -u
+        (
+            kube::codegen::internal::grep -l --null \
+                -e '^\s*//\s*+k8s:defaulter-gen=' \
+                -r "${in_dir}" \
+                --include '*.go' ||
+                true
+        ) | while read -r -d $'\0' F; do dirname "${F}"; done |
+            LC_ALL=C sort -u
     )
 
     if [ "${#input_pkgs[@]}" != 0 ]; then
@@ -205,8 +208,8 @@ function kube::codegen::gen_helpers() {
         kube::codegen::internal::findz \
             "${in_dir}" \
             -type f \
-            -name zz_generated.defaults.go \
-            | xargs -0 rm -f
+            -name zz_generated.defaults.go |
+            xargs -0 rm -f
 
         "${gobin}/defaulter-gen" \
             -v "${v}" \
@@ -222,13 +225,14 @@ function kube::codegen::gen_helpers() {
         pkg="$(cd "${dir}" && GO111MODULE=on go list -find .)"
         input_pkgs+=("${pkg}")
     done < <(
-        ( kube::codegen::internal::grep -l --null \
-            -e '^\s*//\s*+k8s:conversion-gen=' \
-            -r "${in_dir}" \
-            --include '*.go' \
-            || true \
-        ) | while read -r -d $'\0' F; do dirname "${F}"; done \
-          | LC_ALL=C sort -u
+        (
+            kube::codegen::internal::grep -l --null \
+                -e '^\s*//\s*+k8s:conversion-gen=' \
+                -r "${in_dir}" \
+                --include '*.go' ||
+                true
+        ) | while read -r -d $'\0' F; do dirname "${F}"; done |
+            LC_ALL=C sort -u
     )
 
     if [ "${#input_pkgs[@]}" != 0 ]; then
@@ -237,8 +241,8 @@ function kube::codegen::gen_helpers() {
         kube::codegen::internal::findz \
             "${in_dir}" \
             -type f \
-            -name zz_generated.conversion.go \
-            | xargs -0 rm -f
+            -name zz_generated.conversion.go |
+            xargs -0 rm -f
 
         local extra_peer_args=()
         for arg in "${extra_peers[@]:+"${extra_peers[@]}"}"; do
@@ -299,42 +303,42 @@ function kube::codegen::gen_openapi() {
 
     while [ "$#" -gt 0 ]; do
         case "$1" in
-            "--output-dir")
-                out_dir="$2"
-                shift 2
-                ;;
-            "--output-pkg")
-                out_pkg="$2"
-                shift 2
-                ;;
-            "--extra-pkgs")
-                extra_pkgs+=("$2")
-                shift 2
-                ;;
-            "--report-filename")
-                report="$2"
-                shift 2
-                ;;
-            "--update-report")
-                update_report="true"
-                shift
-                ;;
-            "--boilerplate")
-                boilerplate="$2"
-                shift 2
-                ;;
-            *)
-                if [[ "$1" =~ ^-- ]]; then
-                    echo "unknown argument: $1" >&2
-                    return 1
-                fi
-                if [ -n "$in_dir" ]; then
-                    echo "too many arguments: $1 (already have $in_dir)" >&2
-                    return 1
-                fi
-                in_dir="$1"
-                shift
-                ;;
+        "--output-dir")
+            out_dir="$2"
+            shift 2
+            ;;
+        "--output-pkg")
+            out_pkg="$2"
+            shift 2
+            ;;
+        "--extra-pkgs")
+            extra_pkgs+=("$2")
+            shift 2
+            ;;
+        "--report-filename")
+            report="$2"
+            shift 2
+            ;;
+        "--update-report")
+            update_report="true"
+            shift
+            ;;
+        "--boilerplate")
+            boilerplate="$2"
+            shift 2
+            ;;
+        *)
+            if [[ "$1" =~ ^-- ]]; then
+                echo "unknown argument: $1" >&2
+                return 1
+            fi
+            if [ -n "$in_dir" ]; then
+                echo "too many arguments: $1 (already have $in_dir)" >&2
+                return 1
+            fi
+            in_dir="$1"
+            shift
+            ;;
         esac
     done
 
@@ -370,18 +374,19 @@ function kube::codegen::gen_openapi() {
     # Go installs in $GOBIN if defined, and $GOPATH/bin otherwise
     gobin="${GOBIN:-$(go env GOPATH)/bin}"
 
-    local input_pkgs=( "${extra_pkgs[@]:+"${extra_pkgs[@]}"}")
+    local input_pkgs=("${extra_pkgs[@]:+"${extra_pkgs[@]}"}")
     while read -r dir; do
         pkg="$(cd "${dir}" && GO111MODULE=on go list -find .)"
         input_pkgs+=("${pkg}")
     done < <(
-        ( kube::codegen::internal::grep -l --null \
-            -e '^\s*//\s*+k8s:openapi-gen=' \
-            -r "${in_dir}" \
-            --include '*.go' \
-            || true \
-        ) | while read -r -d $'\0' F; do dirname "${F}"; done \
-          | LC_ALL=C sort -u
+        (
+            kube::codegen::internal::grep -l --null \
+                -e '^\s*//\s*+k8s:openapi-gen=' \
+                -r "${in_dir}" \
+                --include '*.go' ||
+                true
+        ) | while read -r -d $'\0' F; do dirname "${F}"; done |
+            LC_ALL=C sort -u
     )
 
     if [ "${#input_pkgs[@]}" != 0 ]; then
@@ -390,8 +395,8 @@ function kube::codegen::gen_openapi() {
         kube::codegen::internal::findz \
             "${in_dir}" \
             -type f \
-            -name zz_generated.openapi.go \
-            | xargs -0 rm -f
+            -name zz_generated.openapi.go |
+            xargs -0 rm -f
 
         "${gobin}/openapi-gen" \
             -v "${v}" \
@@ -498,78 +503,78 @@ function kube::codegen::gen_client() {
 
     while [ "$#" -gt 0 ]; do
         case "$1" in
-            "--one-input-api")
-                one_input_api="/$2"
-                shift 2
-                ;;
-            "--output-dir")
-                out_dir="$2"
-                shift 2
-                ;;
-            "--output-pkg")
-                out_pkg="$2"
-                shift 2
-                ;;
-            "--boilerplate")
-                boilerplate="$2"
-                shift 2
-                ;;
-            "--clientset-name")
-                clientset_subdir="$2"
-                shift 2
-                ;;
-            "--versioned-name")
-                clientset_versioned_name="$2"
-                shift 2
-                ;;
-            "--with-applyconfig")
-                applyconfig="true"
-                shift
-                ;;
-            "--applyconfig-name")
-                applyconfig_subdir="$2"
-                shift 2
-                ;;
-            "--applyconfig-externals")
-                applyconfig_external="$2"
-                shift 2
-                ;;
-            "--applyconfig-openapi-schema")
-                applyconfig_openapi_schema="$2"
-                shift 2
-                ;;
-            "--with-watch")
-                watchable="true"
-                shift
-                ;;
-            "--listers-name")
-                listers_subdir="$2"
-                shift 2
-                ;;
-            "--informers-name")
-                informers_subdir="$2"
-                shift 2
-                ;;
-            "--plural-exceptions")
-                plural_exceptions="$2"
-                shift 2
-                ;;
-            "--prefers-protobuf")
-                prefers_protobuf="true"
-                shift
-                ;;
-            *)
-                if [[ "$1" =~ ^-- ]]; then
-                    echo "unknown argument: $1" >&2
-                    return 1
-                fi
-                if [ -n "$in_dir" ]; then
-                    echo "too many arguments: $1 (already have $in_dir)" >&2
-                    return 1
-                fi
-                in_dir="$1"
-                shift
-                ;;
+        "--one-input-api")
+            one_input_api="/$2"
+            shift 2
+            ;;
+        "--output-dir")
+            out_dir="$2"
+            shift 2
+            ;;
+        "--output-pkg")
+            out_pkg="$2"
+            shift 2
+            ;;
+        "--boilerplate")
+            boilerplate="$2"
+            shift 2
+            ;;
+        "--clientset-name")
+            clientset_subdir="$2"
+            shift 2
+            ;;
+        "--versioned-name")
+            clientset_versioned_name="$2"
+            shift 2
+            ;;
+        "--with-applyconfig")
+            applyconfig="true"
+            shift
+            ;;
+        "--applyconfig-name")
+            applyconfig_subdir="$2"
+            shift 2
+            ;;
+        "--applyconfig-externals")
+            applyconfig_external="$2"
+            shift 2
+            ;;
+        "--applyconfig-openapi-schema")
+            applyconfig_openapi_schema="$2"
+            shift 2
+            ;;
+        "--with-watch")
+            watchable="true"
+            shift
+            ;;
+        "--listers-name")
+            listers_subdir="$2"
+            shift 2
+            ;;
+        "--informers-name")
+            informers_subdir="$2"
+            shift 2
+            ;;
+        "--plural-exceptions")
+            plural_exceptions="$2"
+            shift 2
+            ;;
+        "--prefers-protobuf")
+            prefers_protobuf="true"
+            shift
+            ;;
+        *)
+            if [[ "$1" =~ ^-- ]]; then
+                echo "unknown argument: $1" >&2
+                return 1
+            fi
+            if [ -n "$in_dir" ]; then
+                echo "too many arguments: $1 (already have $in_dir)" >&2
+                return 1
+            fi
+            in_dir="$1"
+            shift
+            ;;
         esac
     done
 
@@ -608,7 +613,7 @@ function kube::codegen::gen_client() {
     while read -r dir; do
         pkg="$(cd "${dir}" && GO111MODULE=on go list -find .)"
         leaf="$(basename "${dir}")"
-        if grep -E -q '^v[0-9]+((alpha|beta)[0-9]+)?$' <<< "${leaf}"; then
+        if grep -E -q '^v[0-9]+((alpha|beta)[0-9]+)?$' <<<"${leaf}"; then
             input_pkgs+=("${pkg}")
 
             dir2="$(dirname "${dir}")"
@@ -616,13 +621,14 @@ function kube::codegen::gen_client() {
             group_versions+=("${leaf2}/${leaf}")
         fi
     done < <(
-        ( kube::codegen::internal::grep -l --null \
-            -e '^\s*//\s*+genclient' \
-            -r "${in_dir}${one_input_api}" \
-            --include '*.go' \
-            || true \
-        ) | while read -r -d $'\0' F; do dirname "${F}"; done \
-          | LC_ALL=C sort -u
+        (
+            kube::codegen::internal::grep -l --null \
+                -e '^\s*//\s*+genclient' \
+                -r "${in_dir}${one_input_api}" \
+                --include '*.go' ||
+                true
+        ) | while read -r -d $'\0' F; do dirname "${F}"; done |
+            LC_ALL=C sort -u
     )
 
     if [ "${#group_versions[@]}" == 0 ]; then
@@ -635,11 +641,12 @@ function kube::codegen::gen_client() {
 
         echo "Generating applyconfig code for ${#input_pkgs[@]} targets"
 
-        ( kube::codegen::internal::grep -l --null \
-            -e '^// Code generated by applyconfiguration-gen. DO NOT EDIT.$' \
-            -r "${out_dir}/${applyconfig_subdir}" \
-            --include '*.go' \
-            || true \
+        (
+            kube::codegen::internal::grep -l --null \
+                -e '^// Code generated by applyconfiguration-gen. DO NOT EDIT.$' \
+                -r "${out_dir}/${applyconfig_subdir}" \
+                --include '*.go' ||
+                true
         ) | xargs -0 rm -f
 
         "${gobin}/applyconfiguration-gen" \
@@ -654,18 +661,19 @@ function kube::codegen::gen_client() {
 
     echo "Generating client code for ${#group_versions[@]} targets"
 
-    ( kube::codegen::internal::grep -l --null \
-        -e '^// Code generated by client-gen. DO NOT EDIT.$' \
-        -r "${out_dir}/${clientset_subdir}" \
-        --include '*.go' \
-        || true \
+    (
+        kube::codegen::internal::grep -l --null \
+            -e '^// Code generated by client-gen. DO NOT EDIT.$' \
+            -r "${out_dir}/${clientset_subdir}" \
+            --include '*.go' ||
+            true
     ) | xargs -0 rm -f
 
     local inputs=()
     for arg in "${group_versions[@]}"; do
         inputs+=("--input" "$arg")
     done
-     "${gobin}/client-gen" \
+    "${gobin}/client-gen" \
         -v "${v}" \
         --go-header-file "${boilerplate}" \
         --output-dir "${out_dir}/${clientset_subdir}" \
@@ -680,11 +688,12 @@ function kube::codegen::gen_client() {
     if [ "${watchable}" == "true" ]; then
         echo "Generating lister code for ${#input_pkgs[@]} targets"
 
-        ( kube::codegen::internal::grep -l --null \
-            -e '^// Code generated by lister-gen. DO NOT EDIT.$' \
-            -r "${out_dir}/${listers_subdir}" \
-            --include '*.go' \
-            || true \
+        (
+            kube::codegen::internal::grep -l --null \
+                -e '^// Code generated by lister-gen. DO NOT EDIT.$' \
+                -r "${out_dir}/${listers_subdir}" \
+                --include '*.go' ||
+                true
         ) | xargs -0 rm -f
 
         "${gobin}/lister-gen" \
@@ -697,11 +706,12 @@ function kube::codegen::gen_client() {
 
         echo "Generating informer code for ${#input_pkgs[@]} targets"
 
-        ( kube::codegen::internal::grep -l --null \
-            -e '^// Code generated by informer-gen. DO NOT EDIT.$' \
-            -r "${out_dir}/${informers_subdir}" \
-            --include '*.go' \
-            || true \
+        (
+            kube::codegen::internal::grep -l --null \
+                -e '^// Code generated by informer-gen. DO NOT EDIT.$' \
+                -r "${out_dir}/${informers_subdir}" \
+                --include '*.go' ||
+                true
         ) | xargs -0 rm -f
 
         "${gobin}/informer-gen" \
@@ -738,22 +748,22 @@ function kube::codegen::gen_register() {
 
     while [ "$#" -gt 0 ]; do
         case "$1" in
-            "--boilerplate")
-                boilerplate="$2"
-                shift 2
-                ;;
-            *)
-                if [[ "$1" =~ ^-- ]]; then
-                    echo "unknown argument: $1" >&2
-                    return 1
-                fi
-                if [ -n "$in_dir" ]; then
-                    echo "too many arguments: $1 (already have $in_dir)" >&2
-                    return 1
-                fi
-                in_dir="$1"
-                shift
-                ;;
+        "--boilerplate")
+            boilerplate="$2"
+            shift 2
+            ;;
+        *)
+            if [[ "$1" =~ ^-- ]]; then
+                echo "unknown argument: $1" >&2
+                return 1
+            fi
+            if [ -n "$in_dir" ]; then
+                echo "too many arguments: $1 (already have $in_dir)" >&2
+                return 1
+            fi
+            in_dir="$1"
+            shift
+            ;;
         esac
     done
 
@@ -782,13 +792,14 @@ function kube::codegen::gen_register() {
         pkg="$(cd "${dir}" && GO111MODULE=on go list -find .)"
         input_pkgs+=("${pkg}")
     done < <(
-        ( kube::codegen::internal::grep -l --null \
-            -e '^\s*//\s*+groupName' \
-            -r "${in_dir}" \
-            --include '*.go' \
-            || true \
-        ) | while read -r -d $'\0' F; do dirname "${F}"; done \
-          | LC_ALL=C sort -u
+        (
+            kube::codegen::internal::grep -l --null \
+                -e '^\s*//\s*+groupName' \
+                -r "${in_dir}" \
+                --include '*.go' ||
+                true
+        ) | while read -r -d $'\0' F; do dirname "${F}"; done |
+            LC_ALL=C sort -u
     )
 
     if [ "${#input_pkgs[@]}" != 0 ]; then
@@ -797,8 +808,8 @@ function kube::codegen::gen_register() {
         kube::codegen::internal::findz \
             "${in_dir}" \
             -type f \
-            -name zz_generated.register.go \
-            | xargs -0 rm -f
+            -name zz_generated.register.go |
+            xargs -0 rm -f
 
         "${gobin}/register-gen" \
             -v "${v}" \

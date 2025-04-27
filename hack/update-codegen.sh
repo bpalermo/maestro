@@ -14,14 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 set -o errexit
 set -o nounset
 set -o pipefail
 
 SCRIPT_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
-CODEGEN_PKG=${CODEGEN_PKG:-$(cd "${SCRIPT_ROOT}"; ls -d -1 ./vendor/k8s.io/code-generator 2>/dev/null || echo ../code-generator)}
+CODEGEN_PKG=${CODEGEN_PKG:-$(
+    cd "${SCRIPT_ROOT}"
+    ls -d -1 ./vendor/k8s.io/code-generator 2>/dev/null || echo ../code-generator
+)}
 
+# shellcheck source=../code-generator/kube_codegen.sh
 source "${CODEGEN_PKG}/kube_codegen.sh"
 
 THIS_PKG="github.com/bpalermo/maestro"

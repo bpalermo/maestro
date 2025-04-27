@@ -1,0 +1,22 @@
+name: codegen
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions: {}
+
+jobs:
+  check:
+    name: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Check codegen
+        working-directory: ./hack
+        run: |
+          ./verify-codegen.sh

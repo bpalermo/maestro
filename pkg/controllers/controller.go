@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/bpalermo/maestro/internal/envoy"
-	maestrov1 "github.com/bpalermo/maestro/pkg/apis/maestro/v1"
+	maestrov1 "github.com/bpalermo/maestro/pkg/apis/maestrocontroller/v1"
 	clientset "github.com/bpalermo/maestro/pkg/generated/clientset/versioned"
 	maestroscheme "github.com/bpalermo/maestro/pkg/generated/clientset/versioned/scheme"
-	informers "github.com/bpalermo/maestro/pkg/generated/informers/externalversions/maestro/v1"
-	listers "github.com/bpalermo/maestro/pkg/generated/listers/maestro/v1"
+	informers "github.com/bpalermo/maestro/pkg/generated/informers/externalversions/maestrocontroller/v1"
+	listers "github.com/bpalermo/maestro/pkg/generated/listers/maestrocontroller/v1"
 	"golang.org/x/time/rate"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -108,8 +108,8 @@ func NewMaestroController(
 	// Set up an event handler for when ProxyConfig resources change
 	_, _ = proxyConfigInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: controller.enqueueProxyConfig,
-		UpdateFunc: func(old, new interface{}) {
-			controller.enqueueProxyConfig(new)
+		UpdateFunc: func(_, n interface{}) {
+			controller.enqueueProxyConfig(n)
 		},
 	})
 	// Set up an event handler for when ConfigMap resources change. This
@@ -120,15 +120,15 @@ func NewMaestroController(
 	// https://github.com/kubernetes/community/blob/8cafef897a22026d42f5e5bb3f104febe7e29830/contributors/devel/controllers.md
 	_, _ = configMapInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: controller.handleObject,
-		UpdateFunc: func(old, new interface{}) {
-			newDepl := new.(*corev1.ConfigMap)
-			oldDepl := old.(*corev1.ConfigMap)
+		UpdateFunc: func(o, n interface{}) {
+			newDepl := n.(*corev1.ConfigMap)
+			oldDepl := o.(*corev1.ConfigMap)
 			if newDepl.ResourceVersion == oldDepl.ResourceVersion {
 				// Periodic resync will send update events for all known ConfigMap.
 				// Two different versions of the same ConfigMap will always have different RVs.
 				return
 			}
-			controller.handleObject(new)
+			controller.handleObject(n)
 		},
 		DeleteFunc: controller.handleObject,
 	})
@@ -291,14 +291,14 @@ func (c *MaestroController) updateProxyConfigStatus(ctx context.Context, proxyCo
 
 // enqueueProxyConfig takes a ProxyConfig resource and converts it into a namespace/name
 // string which is then put onto the work queue. This method should *not* be
-// passed resources of any type other than ProxyConfig.
+// passed to resources of any type other than ProxyConfig.
 func (c *MaestroController) enqueueProxyConfig(obj interface{}) {
-	if objectRef, err := cache.ObjectToName(obj); err != nil {
+	objectRef, err := cache.ObjectToName(obj)
+	if err != nil {
 		runtime.HandleError(err)
 		return
-	} else {
-		c.workqueue.Add(objectRef)
 	}
+	c.workqueue.Add(objectRef)
 }
 
 // handleObject will take any resource implementing metav1.Object and attempt

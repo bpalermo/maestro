@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package controller.v1;
+
+option go_package = "github.com/bpalermo/maestro/api/controller/v1;controllerv1";
+
+message ProxyConfig {}
