@@ -67,7 +67,7 @@ jobs:
   merge:
     runs-on: ubuntu-latest
     environment:
-      name: ${{ github.event_name != 'pull_request' && github.event.pull_request.base.ref || 'pr' }}
+      name: ${{ github.event_name != 'pull_request' && github.ref_name == 'main' && 'main' ||  'pr' }}
     needs:
       - build
     steps:
