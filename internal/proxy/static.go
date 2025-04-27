@@ -10,10 +10,15 @@ import (
 )
 
 func generateStaticResources(svc *configv1.Service, spiffeDomain string) *bootstrapv3.Bootstrap_StaticResources {
-	return &bootstrapv3.Bootstrap_StaticResources{
-		Listeners: generateStaticListeners(svc, spiffeDomain),
-		Clusters:  generateStaticClusters(svc),
+	resources := &bootstrapv3.Bootstrap_StaticResources{}
+	if svc == nil {
+		return resources
 	}
+
+	resources.Listeners = generateStaticListeners(svc, spiffeDomain)
+	resources.Clusters = generateStaticClusters(svc)
+
+	return resources
 }
 
 func generateStaticListeners(svc *configv1.Service, spiffeDomain string) []*listenerv3.Listener {
