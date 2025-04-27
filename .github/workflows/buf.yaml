@@ -1,4 +1,4 @@
-name: Buf CI
+name: buf
 
 on:
   pull_request:

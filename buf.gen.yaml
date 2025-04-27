@@ -1,6 +1,11 @@
 version: v2
+inputs:
+  - directory: api
 plugins:
-  - remote: buf.build/protocolbuffers/go
+  - remote: buf.build/protocolbuffers/go:v1.36.6
+    out: ./api
+    opt: paths=source_relative
+  - remote: buf.build/bufbuild/validate-go:v1.2.1
     out: ./api
     opt: paths=source_relative
   ## go install istio.io/tools/cmd/protoc-gen-golang-deepcopy
@@ -11,5 +16,10 @@ plugins:
   - local: protoc-gen-golang-jsonshim
     out: ./api
     opt: paths=source_relative
-inputs:
-  - directory: api
+managed:
+  enabled: true
+  # Don't modify any file option or field option for protovalidate. Without
+  # this, generated Go will fail to compile.
+  disable:
+    - file_option: go_package
+      module: buf.build/bufbuild/protovalidate

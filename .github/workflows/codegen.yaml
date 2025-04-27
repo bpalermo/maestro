@@ -8,8 +8,7 @@ on:
 permissions: {}
 
 jobs:
-  check:
-    name: check
+  codegen-check:
     runs-on: ubuntu-latest
     permissions:
       contents: read

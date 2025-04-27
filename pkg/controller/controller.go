@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bpalermo/maestro/internal/envoy"
+	"github.com/bpalermo/maestro/internal/proxy"
 	maestrov1 "github.com/bpalermo/maestro/pkg/apis/maestrocontroller/v1"
 	clientset "github.com/bpalermo/maestro/pkg/generated/clientset/versioned"
 	maestroscheme "github.com/bpalermo/maestro/pkg/generated/clientset/versioned/scheme"
@@ -51,10 +51,17 @@ const (
 
 type MaestroControllerArgs struct {
 	ConfigMapPrefix string
+	Spire           *SpireConfig
+}
+
+type SpireConfig struct {
+	TrustDomain string
 }
 
 func NewControllerArgs() *MaestroControllerArgs {
-	return &MaestroControllerArgs{}
+	return &MaestroControllerArgs{
+		Spire: &SpireConfig{},
+	}
 }
 
 // MaestroControllerOption is a functional option type that allows us to configure the Controller.
@@ -83,6 +90,9 @@ type MaestroController struct {
 
 	// configMapPrefix is the prefix used for the ConfigMap resources created by this controller.
 	configMapPrefix string
+
+	// spiffeDomain SPIFFE trust domain
+	spiffeDomain string
 }
 
 // NewMaestroController returns a new sample controller
@@ -92,6 +102,7 @@ func NewMaestroController(
 	maestroClientSet clientset.Interface,
 	configMapInformer coreinformers.ConfigMapInformer,
 	proxyConfigInformer informers.ProxyConfigInformer,
+	spiffeDomain string,
 	options ...MaestroControllerOption) *MaestroController {
 	logger := klog.FromContext(ctx)
 
@@ -119,6 +130,7 @@ func NewMaestroController(
 		proxyConfigsSynced: proxyConfigInformer.Informer().HasSynced,
 		workqueue:          workqueue.NewTypedRateLimitingQueue(ratelimiter),
 		recorder:           recorder,
+		spiffeDomain:       spiffeDomain,
 		configMapPrefix:    defaultConfigMapPrefix,
 	}
 
@@ -394,7 +406,7 @@ func (c *MaestroController) newConfigMap(proxyConfig *maestrov1.ProxyConfig) *co
 			Labels: labels,
 		},
 		Data: map[string]string{
-			"envoy.yaml": envoy.GenerateBootstrap(proxyConfig),
+			"envoy.yaml": proxy.GenerateBootstrap(proxyConfig, c.spiffeDomain),
 		},
 	}
 }

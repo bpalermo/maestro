@@ -15,9 +15,7 @@ env:
 
 jobs:
   lint:
-    name: Lint
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
       packages: read
@@ -29,7 +27,6 @@ jobs:
           # super-linter needs the full git history to get the
           # list of files that changed across commits
           fetch-depth: 0
-
       - name: Super-linter
         uses: super-linter/super-linter@v7.3.0 # x-release-please-version
         env:

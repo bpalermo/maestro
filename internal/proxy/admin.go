@@ -1,4 +1,4 @@
-package envoy
+package proxy
 
 import (
 	bootstrapv3 "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
