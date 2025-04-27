@@ -3,7 +3,7 @@ package cmd
 import (
 	"time"
 
-	"github.com/bpalermo/maestro/pkg/controllers"
+	"github.com/bpalermo/maestro/pkg/controller"
 	clientset "github.com/bpalermo/maestro/pkg/generated/clientset/versioned"
 	informers "github.com/bpalermo/maestro/pkg/generated/informers/externalversions"
 	"github.com/bpalermo/maestro/pkg/signals"
@@ -18,6 +18,8 @@ var (
 	masterURL  string
 	kubeconfig string
 
+	controllerArgs = controller.NewControllerArgs()
+
 	// controllerCmd represents the controller command
 	controllerCmd = &cobra.Command{
 		Use:   "controller",
@@ -28,6 +30,11 @@ var (
 
 func init() {
 	rootCmd.AddCommand(controllerCmd)
+
+	controllerCmd.Flags().StringVar(&masterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
+	controllerCmd.Flags().StringVar(&kubeconfig, "kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
+
+	controllerCmd.Flags().StringVar(&controllerArgs.ConfigMapPrefix, "configMapPrefix", "proxy-config-", "Prefix for proxy config config maps")
 }
 
 func runController(cmd *cobra.Command, args []string) error {
@@ -56,16 +63,26 @@ func runController(cmd *cobra.Command, args []string) error {
 	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, time.Second*30)
 	maestroInformerFactory := informers.NewSharedInformerFactory(maestroClient, time.Second*30)
 
-	controller := controllers.NewMaestroController(ctx, kubeClient, maestroClient,
+	var opts []controller.MaestroControllerOption
+	if controllerArgs.ConfigMapPrefix != "" {
+		opts = append(opts, controller.WithConfigMapPrefix(controllerArgs.ConfigMapPrefix))
+	}
+
+	c := controller.NewMaestroController(
+		ctx,
+		kubeClient,
+		maestroClient,
 		kubeInformerFactory.Core().V1().ConfigMaps(),
-		maestroInformerFactory.Maestro().V1().ProxyConfigs())
+		maestroInformerFactory.Maestro().V1().ProxyConfigs(),
+		opts...,
+	)
 
 	// notice that there is no need to run Start methods in a separate goroutine. (i.e., go kubeInformerFactory.Start(ctx.done())
 	// Start method is non-blocking and runs all registered informers in a dedicated goroutine.
 	kubeInformerFactory.Start(ctx.Done())
 	maestroInformerFactory.Start(ctx.Done())
 
-	if err = controller.Run(ctx, 2); err != nil {
+	if err = c.Run(ctx, 2); err != nil {
 		logger.Error(err, "Error running controller")
 		klog.FlushAndExit(klog.ExitFlushTimeout, 1)
 	}
