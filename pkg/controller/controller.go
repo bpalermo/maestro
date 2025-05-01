@@ -18,13 +18,14 @@ import (
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/dynamic/dynamicinformer"
 	"k8s.io/client-go/informers"
-	coreinformers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog/v2"
@@ -52,6 +53,8 @@ const (
 )
 
 type MaestroControllerArgs struct {
+	MasterURL       string
+	KubeConfig      string
 	ConfigMapPrefix string
 	Spire           *SpireConfig
 }
@@ -70,10 +73,19 @@ func NewControllerArgs() *MaestroControllerArgs {
 type MaestroControllerOption func(*MaestroController)
 
 type MaestroController struct {
+	// ctx is the context for the controller.
+	ctx context.Context
+
 	// kubeClientSet is a standard kubernetes client set
 	kubeClientSet kubernetes.Interface
 	// dynamicClientSet is a client set for our own API group
 	dynamicClientSet *dynamic.DynamicClient
+
+	// kubeInformerFactory is a shared informer factory for the kubernetes API
+	kubeInformerFactory informers.SharedInformerFactory
+
+	// dynamicInformerFactory is a shared informer factory for our own API group
+	dynamicInformerFactory dynamicinformer.DynamicSharedInformerFactory
 
 	configMapsLister   corelisters.ConfigMapLister
 	configMapsSynced   cache.InformerSynced
@@ -93,28 +105,48 @@ type MaestroController struct {
 	// configMapPrefix is the prefix used for the ConfigMap resources created by this controller.
 	configMapPrefix string
 
-	// spiffeDomain SPIFFE trust domain
-	spiffeDomain string
+	// spiffeTrustDomain SPIFFE trust domain
+	spiffeTrustDomain string
 }
 
 // NewMaestroController returns a new sample controller
 func NewMaestroController(
 	ctx context.Context,
-	kubeClientSet kubernetes.Interface,
-	dynamicClientSet *dynamic.DynamicClient,
-	configMapInformer coreinformers.ConfigMapInformer,
-	proxyConfigsInformer informers.GenericInformer,
-	spiffeDomain string,
+	args *MaestroControllerArgs,
 	options ...MaestroControllerOption) *MaestroController {
 	logger := klog.FromContext(ctx)
 	logger.V(4).Info("Creating event broadcaster")
+
+	cfg, err := clientcmd.BuildConfigFromFlags(args.MasterURL, args.KubeConfig)
+	if err != nil {
+		logger.Error(err, "Error building kubeconfig")
+		klog.FlushAndExit(klog.ExitFlushTimeout, 1)
+	}
+
+	kubeClient, err := kubernetes.NewForConfig(cfg)
+	if err != nil {
+		logger.Error(err, "Error building kubernetes clientset")
+		klog.FlushAndExit(klog.ExitFlushTimeout, 1)
+	}
+
+	maestroClient, err := dynamic.NewForConfig(cfg)
+	if err != nil {
+		logger.Error(err, "Error building kubernetes clientset")
+		klog.FlushAndExit(klog.ExitFlushTimeout, 1)
+	}
+
+	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, time.Second*30)
+	dynamicInformerFactory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(maestroClient, time.Second*30, corev1.NamespaceAll, nil)
+
+	configMapInformer := kubeInformerFactory.Core().V1().ConfigMaps()
+	proxyConfigsInformer := dynamicInformerFactory.ForResource(config.ProxyConfigGroupVersionResource)
 
 	// Create an event broadcaster
 	// Add maestro types to the default Kubernetes Scheme so Events can be
 	// logged for maestro types.
 	eventBroadcaster := record.NewBroadcaster(record.WithContext(ctx))
 	eventBroadcaster.StartStructuredLogging(0)
-	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClientSet.CoreV1().Events("")})
+	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: controllerAgentName})
 	ratelimiter := workqueue.NewTypedMaxOfRateLimiter(
 		workqueue.NewTypedItemExponentialFailureRateLimiter[cache.ObjectName](5*time.Millisecond, 1000*time.Second),
@@ -122,16 +154,19 @@ func NewMaestroController(
 	)
 
 	controller := &MaestroController{
-		kubeClientSet:      kubeClientSet,
-		dynamicClientSet:   dynamicClientSet,
-		configMapsLister:   configMapInformer.Lister(),
-		configMapsSynced:   configMapInformer.Informer().HasSynced,
-		proxyConfigLister:  proxyConfigsInformer.Lister(),
-		proxyConfigsSynced: proxyConfigsInformer.Informer().HasSynced,
-		workqueue:          workqueue.NewTypedRateLimitingQueue(ratelimiter),
-		recorder:           recorder,
-		spiffeDomain:       spiffeDomain,
-		configMapPrefix:    defaultConfigMapPrefix,
+		ctx:                    ctx,
+		kubeInformerFactory:    kubeInformerFactory,
+		dynamicInformerFactory: dynamicInformerFactory,
+		kubeClientSet:          kubeClient,
+		dynamicClientSet:       maestroClient,
+		configMapsLister:       configMapInformer.Lister(),
+		configMapsSynced:       configMapInformer.Informer().HasSynced,
+		proxyConfigLister:      proxyConfigsInformer.Lister(),
+		proxyConfigsSynced:     proxyConfigsInformer.Informer().HasSynced,
+		workqueue:              workqueue.NewTypedRateLimitingQueue(ratelimiter),
+		recorder:               recorder,
+		spiffeTrustDomain:      args.Spire.TrustDomain,
+		configMapPrefix:        defaultConfigMapPrefix,
 	}
 
 	// Apply all the functional options to configure the controller.
@@ -176,6 +211,13 @@ func WithConfigMapPrefix(prefix string) MaestroControllerOption {
 	return func(c *MaestroController) {
 		c.configMapPrefix = prefix
 	}
+}
+
+func (c *MaestroController) Start() {
+	// notice that there is no need to run Start methods in a separate goroutine. (i.e., go kubeInformerFactory.Start(ctx.done())
+	// Start method is non-blocking and runs all registered informers in a dedicated goroutine.
+	c.kubeInformerFactory.Start(c.ctx.Done())
+	c.dynamicInformerFactory.Start(c.ctx.Done())
 }
 
 // Run will set up the event handlers for types we are interested in, as well
@@ -463,7 +505,7 @@ func (c *MaestroController) generateProxyConfigConfigMapData(proxyConfigU *unstr
 	}
 
 	return map[string]string{
-		"envoy.yaml": proxy.GenerateBootstrap(proxyConfig, c.spiffeDomain),
+		"envoy.yaml": proxy.GenerateBootstrap(proxyConfig, c.spiffeTrustDomain),
 	}, nil
 }
 
