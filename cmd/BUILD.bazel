@@ -1,0 +1,22 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "cmd",
+    srcs = [
+        "controller.go",
+        "root.go",
+    ],
+    importpath = "github.com/bpalermo/maestro/cmd",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/controller",
+        "//pkg/signals",
+        "@com_github_spf13_cobra//:cobra",
+        "@io_k8s_client_go//dynamic",
+        "@io_k8s_client_go//dynamic/dynamicinformer",
+        "@io_k8s_client_go//informers",
+        "@io_k8s_client_go//kubernetes",
+        "@io_k8s_client_go//tools/clientcmd",
+        "@io_k8s_klog_v2//:klog",
+    ],
+)

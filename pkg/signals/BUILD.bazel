@@ -1,0 +1,12 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "signals",
+    srcs = [
+        "signal.go",
+        "signal_posix.go",
+        "signal_windows.go",
+    ],
+    importpath = "github.com/bpalermo/maestro/pkg/signals",
+    visibility = ["//visibility:public"],
+)

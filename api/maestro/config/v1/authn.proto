@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package maestro.config.v1;
+
+option go_package = "github.com/bpalermo/maestro/api/config/v1;configv1";
+
+message AuthN {}

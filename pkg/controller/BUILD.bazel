@@ -1,0 +1,33 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "controller",
+    srcs = ["controller.go"],
+    importpath = "github.com/bpalermo/maestro/pkg/controller",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//internal/proxy",
+        "//pkg/apis/config",
+        "//pkg/apis/config/v1:config",
+        "@io_k8s_api//core/v1:core",
+        "@io_k8s_apimachinery//pkg/api/errors",
+        "@io_k8s_apimachinery//pkg/apis/meta/v1:meta",
+        "@io_k8s_apimachinery//pkg/apis/meta/v1/unstructured",
+        "@io_k8s_apimachinery//pkg/runtime",
+        "@io_k8s_apimachinery//pkg/runtime/schema",
+        "@io_k8s_apimachinery//pkg/util/runtime",
+        "@io_k8s_apimachinery//pkg/util/wait",
+        "@io_k8s_client_go//dynamic",
+        "@io_k8s_client_go//dynamic/dynamicinformer",
+        "@io_k8s_client_go//informers/core/v1:core",
+        "@io_k8s_client_go//kubernetes",
+        "@io_k8s_client_go//kubernetes/scheme",
+        "@io_k8s_client_go//kubernetes/typed/core/v1:core",
+        "@io_k8s_client_go//listers/core/v1:core",
+        "@io_k8s_client_go//tools/cache",
+        "@io_k8s_client_go//tools/record",
+        "@io_k8s_client_go//util/workqueue",
+        "@io_k8s_klog_v2//:klog",
+        "@org_golang_x_time//rate",
+    ],
+)
