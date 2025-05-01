@@ -1,0 +1,25 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "proxy",
+    srcs = [
+        "admin.go",
+        "config.go",
+        "static.go",
+        "vhosts.go",
+    ],
+    importpath = "github.com/bpalermo/maestro/internal/proxy",
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//api/maestro/config/v1:maestro_config_v1_go_proto",
+        "//internal/config/constants",
+        "//internal/proxy/envoy",
+        "//internal/util",
+        "//pkg/apis/config/v1:config",
+        "@com_github_envoyproxy_go_control_plane_envoy//config/bootstrap/v3:bootstrap",
+        "@com_github_envoyproxy_go_control_plane_envoy//config/cluster/v3:cluster",
+        "@com_github_envoyproxy_go_control_plane_envoy//config/core/v3:core",
+        "@com_github_envoyproxy_go_control_plane_envoy//config/listener/v3:listener",
+        "@com_github_envoyproxy_go_control_plane_envoy//config/route/v3:route",
+    ],
+)

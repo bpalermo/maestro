@@ -1,0 +1,19 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "config",
+    srcs = [
+        "doc.go",
+        "register.go",
+        "types.go",
+    ],
+    importpath = "github.com/bpalermo/maestro/pkg/apis/config/v1",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//api/maestro/config/v1:maestro_config_v1_go_proto",
+        "//pkg/apis/config",
+        "@io_k8s_apimachinery//pkg/apis/meta/v1:meta",
+        "@io_k8s_apimachinery//pkg/runtime",
+        "@io_k8s_apimachinery//pkg/runtime/schema",
+    ],
+)

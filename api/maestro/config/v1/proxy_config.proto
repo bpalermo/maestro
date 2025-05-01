@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package maestro.config.v1;
+
+import "maestro/config/v1/service.proto";
+import "maestro/config/v1/upstream.proto";
+
+option go_package = "github.com/bpalermo/maestro/api/config/v1;configv1";
+
+message ProxyConfigSpec {
+  Service service = 1;
+
+  Upstreams upstreams = 2;
+}
+
+message ProxyConfigStatus {
+    string resource_version = 1;
+}
