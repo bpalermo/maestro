@@ -1,5 +1,5 @@
 load("@gazelle//:def.bzl", "DEFAULT_LANGUAGES", "gazelle", "gazelle_binary")
-load("@rules_go//go:def.bzl", "go_binary", "go_library")
+load("@rules_go//go:def.bzl", "TOOLS_NOGO", "go_binary", "go_library", "nogo")
 load("//bazel/oci:go_multi_arch_image.bzl", "go_multi_arch_image")
 
 exports_files(
@@ -22,6 +22,12 @@ gazelle_binary(
         # NOTE: This needs to be loaded after the proto language
     ],
     visibility = ["//visibility:public"],
+)
+
+nogo(
+    name = "nogo",
+    visibility = ["//visibility:public"],  # must have public visibility
+    deps = TOOLS_NOGO,
 )
 
 go_library(

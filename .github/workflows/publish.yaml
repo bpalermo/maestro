@@ -6,12 +6,14 @@ on:
       - main
 
 env:
-  REGISTRY: ghcr.io
+  REGISTRY: index.docker.io/palermo
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment:
+      name: main
     permissions:
       contents: read
       packages: write
@@ -30,8 +32,8 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build
         run: |
           bazel build //...
