@@ -47,6 +47,6 @@ go_binary(
 go_multi_arch_image(
     name = "maestro_go_multi_arch_image",
     binary = ":maestro",
-    repository = "palermo/maestro",
+    repository = "index.docker.io/palermo/maestro",
     visibility = ["//visibility:public"],
 )
