@@ -15,11 +15,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/dynamic/dynamicinformer"
+	"k8s.io/client-go/informers"
 	coreinformers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -50,14 +49,6 @@ const (
 	FieldManager = controllerAgentName
 
 	defaultConfigMapPrefix = "proxy-config-"
-)
-
-var (
-	proxyConfigsGvr = schema.GroupVersionResource{
-		Group:    config.GroupName,
-		Version:  "v1",
-		Resource: "proxyconfigs",
-	}
 )
 
 type MaestroControllerArgs struct {
@@ -112,14 +103,11 @@ func NewMaestroController(
 	kubeClientSet kubernetes.Interface,
 	dynamicClientSet *dynamic.DynamicClient,
 	configMapInformer coreinformers.ConfigMapInformer,
+	proxyConfigsInformer informers.GenericInformer,
 	spiffeDomain string,
 	options ...MaestroControllerOption) *MaestroController {
 	logger := klog.FromContext(ctx)
 	logger.V(4).Info("Creating event broadcaster")
-
-	dynamicInformerFactory := dynamicinformer.NewDynamicSharedInformerFactory(dynamicClientSet, time.Second*30)
-
-	proxyConfigInformer := dynamicInformerFactory.ForResource(proxyConfigsGvr)
 
 	// Create an event broadcaster
 	// Add maestro types to the default Kubernetes Scheme so Events can be
@@ -138,8 +126,8 @@ func NewMaestroController(
 		dynamicClientSet:   dynamicClientSet,
 		configMapsLister:   configMapInformer.Lister(),
 		configMapsSynced:   configMapInformer.Informer().HasSynced,
-		proxyConfigLister:  proxyConfigInformer.Lister(),
-		proxyConfigsSynced: proxyConfigInformer.Informer().HasSynced,
+		proxyConfigLister:  proxyConfigsInformer.Lister(),
+		proxyConfigsSynced: proxyConfigsInformer.Informer().HasSynced,
 		workqueue:          workqueue.NewTypedRateLimitingQueue(ratelimiter),
 		recorder:           recorder,
 		spiffeDomain:       spiffeDomain,
@@ -153,7 +141,7 @@ func NewMaestroController(
 
 	logger.Info("Setting up event handlers")
 	// Set up an event handler for when ProxyConfig resources change
-	_, _ = proxyConfigInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+	_, _ = proxyConfigsInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: controller.enqueueProxyConfig,
 		UpdateFunc: func(_, n interface{}) {
 			controller.enqueueProxyConfig(n)
@@ -381,7 +369,7 @@ func (c *MaestroController) updateProxyConfigStatus(ctx context.Context, proxyCo
 	// we must use Update instead of UpdateStatus to update the Status block of the ProxyConfig resource.
 	// UpdateStatus will not allow changes to the Spec of the resource,
 	// which is ideal for ensuring nothing other than resource status has been updated.
-	_, err = c.dynamicClientSet.Resource(proxyConfigsGvr).Namespace(proxyConfigU.GetNamespace()).UpdateStatus(ctx, proxyConfigU, metav1.UpdateOptions{FieldManager: FieldManager})
+	_, err = c.dynamicClientSet.Resource(config.ProxyConfigGroupVersionResource).Namespace(proxyConfigU.GetNamespace()).UpdateStatus(ctx, proxyConfigU, metav1.UpdateOptions{FieldManager: FieldManager})
 	return err
 }
 
