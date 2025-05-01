@@ -38,4 +38,4 @@ jobs:
       - name: Push
         run: |
           bazel run //:push -- --repository ${{ env.IMAGE_REPOSITORY }} --tag ${{ github.sha }}
-          bazel run //:push -- --repository ${{ env.IMAGE_REPOSITORY }}} --tag latest
+          bazel run //:push -- --repository ${{ env.IMAGE_REPOSITORY }} --tag latest
