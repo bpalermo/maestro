@@ -16,11 +16,11 @@ test: gazelle
 
 .PHONY: load
 load-image: gazelle
-	@bazel run //:load -- --repository ghcr.io/bpalermo/maestro --tag latest
+	@bazel run //:load -- --repository maestro --tag latest
 
 .PHONY: push
 push-image:
-	@bazel run //:push -- --repository ghcr.io/bpalermo/maestro --tag latest
+	@bazel run //:push -- --repository maestro --tag latest
 
 .PHONY: run-agent
 run-agent:
