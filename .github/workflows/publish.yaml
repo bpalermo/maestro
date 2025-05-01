@@ -6,8 +6,7 @@ on:
       - main
 
 env:
-  REGISTRY: index.docker.io/palermo
-  IMAGE_NAME: ${{ github.event.repository.name }}
+  IMAGE_NAME: palermo/${{ github.event.repository.name }}
 
 jobs:
   publish:
@@ -31,7 +30,6 @@ jobs:
       - name: Log in to the Container registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build
