@@ -1,0 +1,8 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "kube",
+    srcs = ["config.go"],
+    importpath = "github.com/bpalermo/maestro/pkg/kube",
+    visibility = ["//visibility:public"],
+)
