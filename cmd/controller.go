@@ -3,9 +3,11 @@ package cmd
 import (
 	"time"
 
+	"github.com/bpalermo/maestro/pkg/apis/config"
 	"github.com/bpalermo/maestro/pkg/controller"
 	"github.com/bpalermo/maestro/pkg/signals"
 	"github.com/spf13/cobra"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/dynamic/dynamicinformer"
 	kubeinformers "k8s.io/client-go/informers"
@@ -62,7 +64,7 @@ func runController(_ *cobra.Command, _ []string) error {
 	}
 
 	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, time.Second*30)
-	dynamicInformerFactory := dynamicinformer.NewDynamicSharedInformerFactory(maestroClient, time.Second*30)
+	dynamicInformerFactory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(maestroClient, time.Second*30, corev1.NamespaceAll, nil)
 
 	var opts []controller.MaestroControllerOption
 	if controllerArgs.ConfigMapPrefix != "" {
@@ -74,6 +76,7 @@ func runController(_ *cobra.Command, _ []string) error {
 		kubeClient,
 		maestroClient,
 		kubeInformerFactory.Core().V1().ConfigMaps(),
+		dynamicInformerFactory.ForResource(config.ProxyConfigGroupVersionResource),
 		controllerArgs.Spire.TrustDomain,
 		opts...,
 	)
