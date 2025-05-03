@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"crypto/tls"
 	"net/http"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 // httpProbeCmd represents the httpprobe command
 var (
 	url                string
+	rootCAFile         string
 	expectedStatusCode int
 	timeout            time.Duration
 
@@ -26,12 +28,13 @@ var (
 func init() {
 	rootCmd.AddCommand(httpProbeCmd)
 
-	httpProbeCmd.Flags().StringVar(&url, "url", "http://localhost/", "Health check URL")
+	httpProbeCmd.Flags().StringVar(&url, "url", "https://localhost:8443/", "Health check URL")
+	httpProbeCmd.Flags().StringVar(&rootCAFile, "rootCAFile", "/etc/ssl/certs/ca.crt", "TLS certificate authority file path.")
 	httpProbeCmd.Flags().IntVar(&expectedStatusCode, "expectedStatusCode", http.StatusOK, "Timeout for the HTTP request")
 	httpProbeCmd.Flags().DurationVar(&timeout, "timeout", 5*time.Second, "Timeout for the HTTP request")
 }
 
-func runHttpProbe(cmd *cobra.Command, args []string) {
+func runHttpProbe(_ *cobra.Command, _ []string) {
 	klog.InitFlags(nil)
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -39,8 +42,22 @@ func runHttpProbe(cmd *cobra.Command, args []string) {
 
 	logger := klog.FromContext(ctx)
 
+	certPool, err := util.LoadCertPool(rootCAFile)
+	if err != nil {
+		logger.Error(err, "Could not load certificate authority certificate.")
+		klog.FlushAndExit(klog.ExitFlushTimeout, 1)
+	}
+
 	client := &http.Client{
 		Timeout: timeout,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				ClientCAs: certPool,
+			},
+			MaxIdleConns:        1,
+			IdleConnTimeout:     10 * time.Second,
+			TLSHandshakeTimeout: 2 * time.Second,
+		},
 	}
 
 	performHealthCheck(ctx, logger, client)
