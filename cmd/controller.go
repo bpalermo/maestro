@@ -30,7 +30,7 @@ func init() {
 
 	controllerCmd.Flags().StringVar(&controllerArgs.MasterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
 	controllerCmd.Flags().StringVar(&controllerArgs.KubeConfig, "kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
-	controllerCmd.Flags().StringVar(&httpListenAddr, "httpListenAddr", "0.0.0.0:8080", "HTTP server listen address.")
+	controllerCmd.Flags().StringVar(&httpListenAddr, "httpListenAddr", ":8080", "HTTP server listen address.")
 	controllerCmd.Flags().DurationVar(&gracefulShutdownTimeout, "gracefulShutdownTimeout", 30, "Graceful shutdown timeout in seconds")
 
 	controllerCmd.Flags().StringVar(&controllerArgs.ConfigMapPrefix, "configMapPrefix", "proxy-config-", "Prefix for proxy config config maps")
