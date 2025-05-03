@@ -26,8 +26,8 @@ type HTTPServer struct {
 func NewHTTPServerArgs() *HTTPServerArgs {
 	return &HTTPServerArgs{
 		Addr:     ":8443",
-		CertFile: "/etc/ssl/certs/tls.crt",
-		KeyFile:  "/etc/ssl/certs/tls.key",
+		CertFile: "/var/maestro/certs/tls.crt",
+		KeyFile:  "/var/maestro/certs/tls.key",
 	}
 }
 
@@ -61,7 +61,6 @@ func (s *HTTPServer) Start(logger klog.Logger, errChan chan error) {
 	err := s.server.ListenAndServeTLS(s.certFile, s.keyFile)
 	if err != nil && err != http.ErrServerClosed {
 		s.healthy.Store(false)
-		logger.Error(err, "Server failed to start")
 		errChan <- err
 		return
 	}
