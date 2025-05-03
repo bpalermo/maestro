@@ -12,10 +12,10 @@ import (
 )
 
 var (
-	httpListenAddr          string
 	gracefulShutdownTimeout time.Duration
 
 	controllerArgs = controller.NewControllerArgs()
+	httpServerArgs = server.NewHTTPServerArgs()
 
 	// controllerCmd represents the controller command
 	controllerCmd = &cobra.Command{
@@ -30,7 +30,11 @@ func init() {
 
 	controllerCmd.Flags().StringVar(&controllerArgs.MasterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
 	controllerCmd.Flags().StringVar(&controllerArgs.KubeConfig, "kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
-	controllerCmd.Flags().StringVar(&httpListenAddr, "httpListenAddr", ":8080", "HTTP server listen address.")
+
+	controllerCmd.Flags().StringVar(&httpServerArgs.Addr, "httpListenAddr", ":8443", "HTTP server listen address.")
+	controllerCmd.Flags().StringVar(&httpServerArgs.CertFile, "httpCertFile", "/etc/ssl/certs/tls.crt", "HTTP server TLS certificate file path.")
+	controllerCmd.Flags().StringVar(&httpServerArgs.KeyFile, "httpKeyFile", "/etc/ssl/certs/tls.key", "HTTP server TLS key file path.")
+
 	controllerCmd.Flags().DurationVar(&gracefulShutdownTimeout, "gracefulShutdownTimeout", 30, "Graceful shutdown timeout in seconds")
 
 	controllerCmd.Flags().StringVar(&controllerArgs.ConfigMapPrefix, "configMapPrefix", "proxy-config-", "Prefix for proxy config config maps")
@@ -54,7 +58,7 @@ func runController(_ *cobra.Command, _ []string) {
 		opts...,
 	)
 
-	s := server.NewServer(httpListenAddr, logger)
+	s := server.NewServer(httpServerArgs, logger)
 
 	errChan := make(chan error, 1)
 

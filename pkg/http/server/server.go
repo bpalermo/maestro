@@ -10,17 +10,33 @@ import (
 	"k8s.io/klog/v2"
 )
 
-type HTTPServer struct {
-	server  *http.Server
-	healthy *atomic.Bool
+type HTTPServerArgs struct {
+	Addr     string
+	CertFile string
+	KeyFile  string
 }
 
-func NewServer(addr string, logger klog.Logger) *HTTPServer {
+type HTTPServer struct {
+	certFile string
+	keyFile  string
+	server   *http.Server
+	healthy  *atomic.Bool
+}
+
+func NewHTTPServerArgs() *HTTPServerArgs {
+	return &HTTPServerArgs{
+		Addr:     ":8443",
+		CertFile: "/etc/ssl/certs/tls.crt",
+		KeyFile:  "/etc/ssl/certs/tls.key",
+	}
+}
+
+func NewServer(args *HTTPServerArgs, logger klog.Logger) *HTTPServer {
 	mux := http.NewServeMux()
 
 	s := &HTTPServer{
 		server: &http.Server{
-			Addr:    addr,
+			Addr:    args.Addr,
 			Handler: mux,
 		},
 		healthy: atomic.NewBool(true),
@@ -42,7 +58,7 @@ func NewServer(addr string, logger klog.Logger) *HTTPServer {
 
 func (s *HTTPServer) Start(logger klog.Logger, errChan chan error) {
 	logger.Info("Server listening", "addr", s.server.Addr)
-	err := s.server.ListenAndServe()
+	err := s.server.ListenAndServeTLS(s.certFile, s.keyFile)
 	if err != nil && err != http.ErrServerClosed {
 		s.healthy.Store(false)
 		logger.Error(err, "Server failed to start")

@@ -6,6 +6,7 @@ go_library(
         "closer.go",
         "proto.go",
         "sni.go",
+        "tls.go",
         "unstructured.go",
     ],
     importpath = "github.com/bpalermo/maestro/internal/util",
