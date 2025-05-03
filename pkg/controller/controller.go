@@ -213,11 +213,15 @@ func WithConfigMapPrefix(prefix string) MaestroControllerOption {
 	}
 }
 
-func (c *MaestroController) Start() {
+func (c *MaestroController) Start(logger klog.Logger, errChan chan error) {
 	// notice that there is no need to run Start methods in a separate goroutine. (i.e., go kubeInformerFactory.Start(ctx.done())
 	// Start method is non-blocking and runs all registered informers in a dedicated goroutine.
 	c.kubeInformerFactory.Start(c.ctx.Done())
 	c.dynamicInformerFactory.Start(c.ctx.Done())
+
+	if err := c.Run(c.ctx, 2); err != nil {
+		errChan <- err
+	}
 }
 
 // Run will set up the event handlers for types we are interested in, as well

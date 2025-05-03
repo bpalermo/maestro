@@ -1,15 +1,18 @@
 package cmd
 
 import (
+	"context"
+	"time"
+
+	"github.com/bpalermo/maestro/internal/core/shutdown"
 	"github.com/bpalermo/maestro/pkg/controller"
-	"github.com/bpalermo/maestro/pkg/signals"
+	"github.com/bpalermo/maestro/pkg/http/server"
 	"github.com/spf13/cobra"
 	"k8s.io/klog/v2"
 )
 
 var (
-	masterURL  string
-	kubeconfig string
+	gracefulShutdownTimeout time.Duration
 
 	controllerArgs = controller.NewControllerArgs()
 
@@ -17,7 +20,7 @@ var (
 	controllerCmd = &cobra.Command{
 		Use:   "controller",
 		Short: "Starts the controller",
-		RunE:  runController,
+		Run:   runController,
 	}
 )
 
@@ -26,15 +29,16 @@ func init() {
 
 	controllerCmd.Flags().StringVar(&controllerArgs.MasterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
 	controllerCmd.Flags().StringVar(&controllerArgs.KubeConfig, "kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
+	controllerCmd.Flags().DurationVar(&gracefulShutdownTimeout, "gracefulShutdownTimeout", 30, "Graceful shutdown timeout in seconds")
 
 	controllerCmd.Flags().StringVar(&controllerArgs.ConfigMapPrefix, "configMapPrefix", "proxy-config-", "Prefix for proxy config config maps")
 	controllerCmd.Flags().StringVar(&controllerArgs.Spire.TrustDomain, "spireTrustDomain", "cluster.local", "Spire SPIFFE trust domain")
 }
 
-func runController(_ *cobra.Command, _ []string) error {
+func runController(_ *cobra.Command, _ []string) {
 	klog.InitFlags(nil)
-	// set up signals so we handle the shutdown signal gracefully
-	ctx := signals.SetupSignalHandler()
+
+	ctx := context.Background()
 	logger := klog.FromContext(ctx)
 
 	var opts []controller.MaestroControllerOption
@@ -48,12 +52,18 @@ func runController(_ *cobra.Command, _ []string) error {
 		opts...,
 	)
 
-	c.Start()
+	s := server.NewServer(8080, logger)
 
-	if err := c.Run(ctx, 2); err != nil {
+	errChan := make(chan error, 1)
+
+	go c.Start(logger, errChan)
+	go s.Start(logger, errChan)
+
+	go func() {
+		err := <-errChan
 		logger.Error(err, "Error running controller")
 		klog.FlushAndExit(klog.ExitFlushTimeout, 1)
-	}
+	}()
 
-	return nil
+	shutdown.AddShutdownHook(ctx, logger, 30*time.Second)
 }

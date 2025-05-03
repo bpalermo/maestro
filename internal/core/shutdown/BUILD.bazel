@@ -1,0 +1,9 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "shutdown",
+    srcs = ["shutdown.go"],
+    importpath = "github.com/bpalermo/maestro/internal/core/shutdown",
+    visibility = ["//:__subpackages__"],
+    deps = ["@io_k8s_klog_v2//:klog"],
+)
