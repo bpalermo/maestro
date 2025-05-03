@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/http/pprof"
 
@@ -20,11 +19,10 @@ type Server struct {
 
 type HttpServerOption func(*Server)
 
-func NewServer(port int, logger klog.Logger) *Server {
+func NewServer(addr string, logger klog.Logger) *Server {
 	s := &Server{
-		port: port,
 		server: &http.Server{
-			Addr: fmt.Sprintf(":%d", port),
+			Addr: addr,
 		},
 		router:  http.NewServeMux(),
 		healthy: atomic.NewBool(true),
