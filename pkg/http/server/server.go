@@ -60,12 +60,12 @@ func (s *HTTPServer) Shutdown(ctx context.Context) error {
 }
 
 func (s *HTTPServer) livenessHandler(w http.ResponseWriter, _ *http.Request) {
-	w.WriteHeader(http.StatusNoContent)
+	w.WriteHeader(http.StatusOK)
 }
 
 func (s *HTTPServer) readinessHandler(w http.ResponseWriter, _ *http.Request) {
 	if s.healthy.Load() {
-		w.WriteHeader(http.StatusNoContent)
+		w.WriteHeader(http.StatusOK)
 		return
 	}
 	w.WriteHeader(http.StatusServiceUnavailable)
