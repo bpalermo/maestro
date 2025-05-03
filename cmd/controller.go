@@ -32,8 +32,8 @@ func init() {
 	controllerCmd.Flags().StringVar(&controllerArgs.KubeConfig, "kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
 
 	controllerCmd.Flags().StringVar(&httpServerArgs.Addr, "httpListenAddr", ":8443", "HTTP server listen address.")
-	controllerCmd.Flags().StringVar(&httpServerArgs.CertFile, "httpCertFile", "/etc/ssl/certs/tls.crt", "HTTP server TLS certificate file path.")
-	controllerCmd.Flags().StringVar(&httpServerArgs.KeyFile, "httpKeyFile", "/etc/ssl/certs/tls.key", "HTTP server TLS key file path.")
+	controllerCmd.Flags().StringVar(&httpServerArgs.CertFile, "httpCertFile", "/var/maestro/certs/tls.crt", "HTTP server TLS certificate file path.")
+	controllerCmd.Flags().StringVar(&httpServerArgs.KeyFile, "httpKeyFile", "/var/maestro/certs/tls.key", "HTTP server TLS key file path.")
 
 	controllerCmd.Flags().DurationVar(&gracefulShutdownTimeout, "gracefulShutdownTimeout", 30, "Graceful shutdown timeout in seconds")
 
@@ -44,7 +44,9 @@ func init() {
 func runController(_ *cobra.Command, _ []string) {
 	klog.InitFlags(nil)
 
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	logger := klog.FromContext(ctx)
 
 	var opts []controller.MaestroControllerOption
@@ -68,6 +70,7 @@ func runController(_ *cobra.Command, _ []string) {
 	go func() {
 		err := <-errChan
 		logger.Error(err, "Error running controller")
+		cancel()
 		klog.FlushAndExit(klog.ExitFlushTimeout, 1)
 	}()
 
