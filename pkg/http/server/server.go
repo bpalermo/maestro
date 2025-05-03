@@ -10,43 +10,37 @@ import (
 	"k8s.io/klog/v2"
 )
 
-type Server struct {
-	port    int
-	router  *http.ServeMux
+type HTTPServer struct {
 	server  *http.Server
 	healthy *atomic.Bool
 }
 
-type HttpServerOption func(*Server)
+func NewServer(addr string, logger klog.Logger) *HTTPServer {
+	mux := http.NewServeMux()
 
-func NewServer(addr string, logger klog.Logger) *Server {
-	s := &Server{
+	s := &HTTPServer{
 		server: &http.Server{
-			Addr: addr,
+			Addr:    addr,
+			Handler: mux,
 		},
-		router:  http.NewServeMux(),
 		healthy: atomic.NewBool(true),
 	}
 
-	s.router.HandleFunc("/debug/pprof/", pprof.Index)
-	s.router.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
-	s.router.HandleFunc("/debug/pprof/profile", pprof.Profile)
-	s.router.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-	s.router.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	mux.HandleFunc("/debug/pprof/", pprof.Index)
+	mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
 
-	s.router.Handle("/validate", handlers.NewAdmissionValidationHandler(logger))
+	mux.Handle("/validate", handlers.NewAdmissionValidationHandler(logger))
 
-	s.router.HandleFunc("GET /-/-/liveness", s.livenessHandler)
-	s.router.HandleFunc("GET /-/-/readiness", s.readinessHandler)
+	mux.HandleFunc("GET /-/-/liveness", s.livenessHandler)
+	mux.HandleFunc("GET /-/-/readiness", s.readinessHandler)
 
 	return s
 }
 
-func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	s.router.ServeHTTP(w, r)
-}
-
-func (s *Server) Start(logger klog.Logger, errChan chan error) {
+func (s *HTTPServer) Start(logger klog.Logger, errChan chan error) {
 	logger.Info("Server listening", "addr", s.server.Addr)
 	err := s.server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
@@ -59,17 +53,17 @@ func (s *Server) Start(logger klog.Logger, errChan chan error) {
 	logger.Info("Server stopped")
 }
 
-func (s *Server) Shutdown(ctx context.Context) error {
+func (s *HTTPServer) Shutdown(ctx context.Context) error {
 	s.server.SetKeepAlivesEnabled(false)
 	s.healthy.Store(false)
 	return s.server.Shutdown(ctx)
 }
 
-func (s *Server) livenessHandler(w http.ResponseWriter, _ *http.Request) {
+func (s *HTTPServer) livenessHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (s *Server) readinessHandler(w http.ResponseWriter, _ *http.Request) {
+func (s *HTTPServer) readinessHandler(w http.ResponseWriter, _ *http.Request) {
 	if s.healthy.Load() {
 		w.WriteHeader(http.StatusNoContent)
 		return
