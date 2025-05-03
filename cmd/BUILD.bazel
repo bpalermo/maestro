@@ -4,12 +4,14 @@ go_library(
     name = "cmd",
     srcs = [
         "controller.go",
+        "httpprobe.go",
         "root.go",
     ],
     importpath = "github.com/bpalermo/maestro/cmd",
     visibility = ["//visibility:public"],
     deps = [
         "//internal/core/shutdown",
+        "//internal/util",
         "//pkg/controller",
         "//pkg/http/server",
         "@com_github_spf13_cobra//:cobra",

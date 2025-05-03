@@ -49,7 +49,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) Start(logger klog.Logger, errChan chan error) {
-	logger.Info("Server listening on address %s", s.server.Addr)
+	logger.Info("Server listening", "addr", s.server.Addr)
 	err := s.server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		s.healthy.Store(false)
