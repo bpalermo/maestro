@@ -9,8 +9,9 @@ go_library(
     importpath = "github.com/bpalermo/maestro/cmd",
     visibility = ["//visibility:public"],
     deps = [
+        "//internal/core/shutdown",
         "//pkg/controller",
-        "//pkg/signals",
+        "//pkg/http/server",
         "@com_github_spf13_cobra//:cobra",
         "@io_k8s_klog_v2//:klog",
     ],

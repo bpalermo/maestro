@@ -1,0 +1,13 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "server",
+    srcs = ["server.go"],
+    importpath = "github.com/bpalermo/maestro/pkg/http/server",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/http/handlers",
+        "@io_k8s_klog_v2//:klog",
+        "@org_uber_go_atomic//:atomic",
+    ],
+)
