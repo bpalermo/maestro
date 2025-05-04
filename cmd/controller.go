@@ -31,9 +31,8 @@ func init() {
 	controllerCmd.Flags().StringVar(&controllerArgs.MasterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
 	controllerCmd.Flags().StringVar(&controllerArgs.KubeConfig, "kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
 
-	controllerCmd.Flags().StringVar(&httpServerArgs.Addr, "httpListenAddr", ":8443", "HTTP server listen address.")
-	controllerCmd.Flags().StringVar(&httpServerArgs.CertFile, "httpCertFile", "/var/maestro/certs/tls.crt", "HTTP server TLS certificate file path.")
-	controllerCmd.Flags().StringVar(&httpServerArgs.KeyFile, "httpKeyFile", "/var/maestro/certs/tls.key", "HTTP server TLS key file path.")
+	controllerCmd.Flags().StringVar(&httpServerArgs.Addr, "httpListenAddr", ":443", "HTTP server listen address.")
+	controllerCmd.Flags().StringVar(&httpServerArgs.SpireSocketPath, "spireSocketPath", "unix:///spiffe-workload-api/spire-agent.sock", "Provides an address for the Workload API. The value of the SPIFFE_ENDPOINT_SOCKET environment variable will be used if the option is unused.")
 
 	controllerCmd.Flags().DurationVar(&gracefulShutdownTimeout, "gracefulShutdownTimeout", 30*time.Second, "Graceful shutdown timeout in seconds")
 
@@ -58,7 +57,12 @@ func runController(_ *cobra.Command, _ []string) {
 		opts...,
 	)
 
-	s := server.NewServer(httpServerArgs, logger)
+	s, err := server.NewServer(ctx, httpServerArgs, logger)
+	if err != nil {
+		logger.Error(err, "Could not create a HTTP server")
+		cancel()
+		klog.FlushAndExit(klog.ExitFlushTimeout, 1)
+	}
 
 	errChan := make(chan error, 1)
 

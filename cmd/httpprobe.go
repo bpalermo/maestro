@@ -2,21 +2,20 @@ package cmd
 
 import (
 	"context"
-	"crypto/tls"
 	"net/http"
 	"time"
 
 	"github.com/bpalermo/maestro/internal/util"
 	"github.com/spf13/cobra"
+	"github.com/spiffe/go-spiffe/v2/spiffetls/tlsconfig"
+	"github.com/spiffe/go-spiffe/v2/workloadapi"
 	"k8s.io/klog/v2"
 )
 
 // httpProbeCmd represents the httpprobe command
 var (
 	url                string
-	tlsCACert          string
-	tlsServerName      string
-	tlsSkipVerify      bool
+	spireSocketPath    string
 	expectedStatusCode int
 	timeout            time.Duration
 
@@ -30,10 +29,8 @@ var (
 func init() {
 	rootCmd.AddCommand(httpProbeCmd)
 
-	httpProbeCmd.Flags().StringVar(&url, "url", "https://localhost:8443/", "Health check URL")
-	httpProbeCmd.Flags().StringVar(&tlsCACert, "tlsCACert", "/var/maestro/certs/ca.crt", "TLS certificate authority file path.")
-	httpProbeCmd.Flags().StringVar(&tlsServerName, "tlsServerName", "", "TLS certificate authority file path.")
-	httpProbeCmd.Flags().BoolVar(&tlsSkipVerify, "tlsSkipVerify", false, "Dont verify the TLS certificate presented by the server.")
+	httpProbeCmd.Flags().StringVar(&url, "url", "https://localhost/", "Health check URL")
+	httpProbeCmd.Flags().StringVar(&spireSocketPath, "spireSocketPath", "unix:///spiffe-workload-api/spire-agent.sock", "Provides an address for the Workload API. The value of the SPIFFE_ENDPOINT_SOCKET environment variable will be used if the option is unused.")
 	httpProbeCmd.Flags().IntVar(&expectedStatusCode, "expectedStatusCode", http.StatusOK, "Timeout for the HTTP request")
 	httpProbeCmd.Flags().DurationVar(&timeout, "timeout", 5*time.Second, "Timeout for the HTTP request")
 }
@@ -44,26 +41,19 @@ func runHttpProbe(_ *cobra.Command, _ []string) {
 
 	logger := klog.FromContext(ctx)
 
-	var cfg tls.Config
+	source, err := workloadapi.NewX509Source(ctx, workloadapi.WithClientOptions(workloadapi.WithAddr(spireSocketPath)))
+	if err != nil {
+		logger.Error(err, "Failed to create request")
+		klog.FlushAndExit(klog.ExitFlushTimeout, 1)
+	}
+	defer util.MustClose(source)
 
-	if tlsServerName != "" {
-		cfg.ServerName = tlsServerName
-	}
-	if tlsSkipVerify {
-		cfg.InsecureSkipVerify = true
-	} else if tlsCACert != "" {
-		certPool, err := util.LoadCertPool(tlsCACert)
-		if err != nil {
-			logger.Error(err, "Could not load certificate authority certificate.")
-			klog.FlushAndExit(klog.ExitFlushTimeout, 1)
-		}
-		cfg.RootCAs = certPool
-	}
+	tlsConfig := tlsconfig.TLSClientConfig(source, tlsconfig.AuthorizeAny())
 
 	client := &http.Client{
 		Timeout: timeout,
 		Transport: &http.Transport{
-			TLSClientConfig:     &cfg,
+			TLSClientConfig:     tlsConfig,
 			MaxIdleConns:        1,
 			IdleConnTimeout:     10 * time.Second,
 			TLSHandshakeTimeout: 2 * time.Second,

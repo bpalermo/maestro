@@ -6,7 +6,10 @@ toolchain go1.24.2
 
 require github.com/spf13/cobra v1.9.1
 
-require github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
+require (
+	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
+	github.com/zeebo/errs v1.4.0 // indirect
+)
 
 require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.6-20250425153114-8976f5be98c1.1
@@ -47,6 +50,7 @@ require (
 	github.com/envoyproxy/go-control-plane v0.13.4
 	github.com/envoyproxy/go-control-plane/envoy v1.32.4
 	github.com/fxamacker/cbor/v2 v2.8.0
+	github.com/go-jose/go-jose/v4 v4.1.0
 	github.com/go-openapi/jsonreference v0.21.0
 	github.com/go-openapi/swag v0.23.1
 	github.com/golang/protobuf v1.5.4
@@ -55,6 +59,7 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822
 	github.com/spf13/pflag v1.0.6
+	github.com/spiffe/go-spiffe/v2 v2.5.0
 	go.uber.org/atomic v1.11.0
 	golang.org/x/net v0.39.0
 	golang.org/x/oauth2 v0.29.0

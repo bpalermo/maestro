@@ -16,6 +16,8 @@ go_library(
         "//pkg/http/server",
         "@com_github_spf13_cobra//:cobra",
         "@com_github_spf13_pflag//:pflag",
+        "@com_github_spiffe_go_spiffe_v2//spiffetls/tlsconfig",
+        "@com_github_spiffe_go_spiffe_v2//workloadapi",
         "@io_k8s_klog_v2//:klog",
     ],
 )
