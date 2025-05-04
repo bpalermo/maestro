@@ -14,7 +14,9 @@ import (
 // httpProbeCmd represents the httpprobe command
 var (
 	url                string
-	rootCAFile         string
+	tlsCACert          string
+	tlsServerName      string
+	tlsSkipVerify      bool
 	expectedStatusCode int
 	timeout            time.Duration
 
@@ -29,7 +31,9 @@ func init() {
 	rootCmd.AddCommand(httpProbeCmd)
 
 	httpProbeCmd.Flags().StringVar(&url, "url", "https://localhost:8443/", "Health check URL")
-	httpProbeCmd.Flags().StringVar(&rootCAFile, "rootCAFile", "/var/maestro/certs/ca.crt", "TLS certificate authority file path.")
+	httpProbeCmd.Flags().StringVar(&tlsCACert, "tlsCACert", "/var/maestro/certs/ca.crt", "TLS certificate authority file path.")
+	httpProbeCmd.Flags().StringVar(&tlsServerName, "tlsServerName", "", "TLS certificate authority file path.")
+	httpProbeCmd.Flags().BoolVar(&tlsSkipVerify, "tlsSkipVerify", false, "Dont verify the TLS certificate presented by the server.")
 	httpProbeCmd.Flags().IntVar(&expectedStatusCode, "expectedStatusCode", http.StatusOK, "Timeout for the HTTP request")
 	httpProbeCmd.Flags().DurationVar(&timeout, "timeout", 5*time.Second, "Timeout for the HTTP request")
 }
@@ -40,18 +44,26 @@ func runHttpProbe(_ *cobra.Command, _ []string) {
 
 	logger := klog.FromContext(ctx)
 
-	certPool, err := util.LoadCertPool(rootCAFile)
-	if err != nil {
-		logger.Error(err, "Could not load certificate authority certificate.")
-		klog.FlushAndExit(klog.ExitFlushTimeout, 1)
+	var cfg tls.Config
+
+	if tlsServerName != "" {
+		cfg.ServerName = tlsServerName
+	}
+	if tlsSkipVerify {
+		cfg.InsecureSkipVerify = true
+	} else if tlsCACert != "" {
+		certPool, err := util.LoadCertPool(tlsCACert)
+		if err != nil {
+			logger.Error(err, "Could not load certificate authority certificate.")
+			klog.FlushAndExit(klog.ExitFlushTimeout, 1)
+		}
+		cfg.RootCAs = certPool
 	}
 
 	client := &http.Client{
 		Timeout: timeout,
 		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				ClientCAs: certPool,
-			},
+			TLSClientConfig:     &cfg,
 			MaxIdleConns:        1,
 			IdleConnTimeout:     10 * time.Second,
 			TLSHandshakeTimeout: 2 * time.Second,
