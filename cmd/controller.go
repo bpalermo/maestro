@@ -5,9 +5,11 @@ import (
 	"time"
 
 	"github.com/bpalermo/maestro/internal/core/shutdown"
+	"github.com/bpalermo/maestro/internal/util"
 	"github.com/bpalermo/maestro/pkg/controller"
 	"github.com/bpalermo/maestro/pkg/http/server"
 	"github.com/spf13/cobra"
+	"github.com/spiffe/go-spiffe/v2/workloadapi"
 	"k8s.io/klog/v2"
 )
 
@@ -57,7 +59,17 @@ func runController(_ *cobra.Command, _ []string) {
 		opts...,
 	)
 
-	s, err := server.NewServer(ctx, httpServerArgs, logger)
+	// Create a `workloadapi.X509Source`, it will connect to Workload API using the provided socket.
+	// If the socket path is not defined using `workloadapi.SourceOption`, the value from environment variable `SPIFFE_ENDPOINT_SOCKET` is used.
+	source, err := workloadapi.NewX509Source(ctx, workloadapi.WithClientOptions(workloadapi.WithAddr(httpServerArgs.SpireSocketPath)))
+	if err != nil {
+		logger.Error(err, "Unable to create X509Source")
+		cancel()
+		klog.FlushAndExit(klog.ExitFlushTimeout, 1)
+	}
+	defer util.MustClose(source)
+
+	s, err := server.NewServer(httpServerArgs, source, logger)
 	if err != nil {
 		logger.Error(err, "Could not create a HTTP server")
 		cancel()
