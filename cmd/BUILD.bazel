@@ -15,6 +15,7 @@ go_library(
         "//pkg/controller",
         "//pkg/http/server",
         "@com_github_spf13_cobra//:cobra",
+        "@com_github_spf13_pflag//:pflag",
         "@io_k8s_klog_v2//:klog",
     ],
 )
