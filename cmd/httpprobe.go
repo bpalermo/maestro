@@ -29,7 +29,7 @@ func init() {
 	rootCmd.AddCommand(httpProbeCmd)
 
 	httpProbeCmd.Flags().StringVar(&url, "url", "https://localhost:8443/", "Health check URL")
-	httpProbeCmd.Flags().StringVar(&rootCAFile, "rootCAFile", "/etc/ssl/certs/ca.crt", "TLS certificate authority file path.")
+	httpProbeCmd.Flags().StringVar(&rootCAFile, "rootCAFile", "/var/maestro/certs/ca.crt", "TLS certificate authority file path.")
 	httpProbeCmd.Flags().IntVar(&expectedStatusCode, "expectedStatusCode", http.StatusOK, "Timeout for the HTTP request")
 	httpProbeCmd.Flags().DurationVar(&timeout, "timeout", 5*time.Second, "Timeout for the HTTP request")
 }
