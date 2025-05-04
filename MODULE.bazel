@@ -49,6 +49,7 @@ use_repo(
     "com_github_google_uuid",
     "com_github_munnerz_goautoneg",
     "com_github_spf13_cobra",
+    "com_github_spf13_pflag",
     "in_gopkg_evanphx_json_patch_v4",
     "io_istio_tools",
     "io_k8s_api",
