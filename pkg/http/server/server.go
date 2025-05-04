@@ -2,46 +2,55 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/pprof"
 
+	"github.com/bpalermo/maestro/internal/util"
 	"github.com/bpalermo/maestro/pkg/http/handlers"
+	"github.com/spiffe/go-spiffe/v2/spiffetls/tlsconfig"
+	"github.com/spiffe/go-spiffe/v2/workloadapi"
 	"go.uber.org/atomic"
 	"k8s.io/klog/v2"
 )
 
 type HTTPServerArgs struct {
-	Addr     string
-	CertFile string
-	KeyFile  string
+	Addr            string
+	SpireSocketPath string
 }
 
 type HTTPServer struct {
-	certFile string
-	keyFile  string
-	server   *http.Server
-	healthy  *atomic.Bool
+	server  *http.Server
+	healthy *atomic.Bool
 }
 
 func NewHTTPServerArgs() *HTTPServerArgs {
 	return &HTTPServerArgs{
-		Addr:     ":8443",
-		CertFile: "/var/maestro/certs/tls.crt",
-		KeyFile:  "/var/maestro/certs/tls.key",
+		Addr:            ":443",
+		SpireSocketPath: "unix:///spiffe-workload-api/spire-agent.sock",
 	}
 }
 
-func NewServer(args *HTTPServerArgs, logger klog.Logger) *HTTPServer {
+func NewServer(ctx context.Context, args *HTTPServerArgs, logger klog.Logger) (*HTTPServer, error) {
 	mux := http.NewServeMux()
+
+	// Create a `workloadapi.X509Source`, it will connect to Workload API using the provided socket.
+	// If the socket path is not defined using `workloadapi.SourceOption`, the value from environment variable `SPIFFE_ENDPOINT_SOCKET` is used.
+	source, err := workloadapi.NewX509Source(ctx, workloadapi.WithClientOptions(workloadapi.WithAddr(args.SpireSocketPath)))
+	if err != nil {
+		return nil, fmt.Errorf("unable to create X509Source: %w", err)
+	}
+	defer util.MustClose(source)
+
+	tlsConfig := tlsconfig.TLSServerConfig(source)
 
 	s := &HTTPServer{
 		server: &http.Server{
-			Addr:    args.Addr,
-			Handler: mux,
+			Addr:      args.Addr,
+			Handler:   mux,
+			TLSConfig: tlsConfig,
 		},
-		healthy:  atomic.NewBool(true),
-		certFile: args.CertFile,
-		keyFile:  args.KeyFile,
+		healthy: atomic.NewBool(true),
 	}
 
 	mux.HandleFunc("/debug/pprof/", pprof.Index)
@@ -55,14 +64,13 @@ func NewServer(args *HTTPServerArgs, logger klog.Logger) *HTTPServer {
 	mux.HandleFunc("GET /-/-/liveness", s.livenessHandler)
 	mux.HandleFunc("GET /-/-/readiness", s.readinessHandler)
 
-	return s
+	return s, nil
 }
 
 func (s *HTTPServer) Start(logger klog.Logger, errChan chan error) {
 	logger.Info("Server listening", "addr", s.server.Addr)
-	logger.V(1).Info("Using TLS certificate", "cert", s.certFile, "key", s.keyFile)
 
-	err := s.server.ListenAndServeTLS(s.certFile, s.keyFile)
+	err := s.server.ListenAndServeTLS("", "")
 	if err != nil && err != http.ErrServerClosed {
 		s.healthy.Store(false)
 		errChan <- err
