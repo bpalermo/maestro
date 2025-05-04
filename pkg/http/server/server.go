@@ -2,11 +2,9 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/http/pprof"
 
-	"github.com/bpalermo/maestro/internal/util"
 	"github.com/bpalermo/maestro/pkg/http/handlers"
 	"github.com/spiffe/go-spiffe/v2/spiffetls/tlsconfig"
 	"github.com/spiffe/go-spiffe/v2/workloadapi"
@@ -31,16 +29,8 @@ func NewHTTPServerArgs() *HTTPServerArgs {
 	}
 }
 
-func NewServer(ctx context.Context, args *HTTPServerArgs, logger klog.Logger) (*HTTPServer, error) {
+func NewServer(args *HTTPServerArgs, source *workloadapi.X509Source, logger klog.Logger) (*HTTPServer, error) {
 	mux := http.NewServeMux()
-
-	// Create a `workloadapi.X509Source`, it will connect to Workload API using the provided socket.
-	// If the socket path is not defined using `workloadapi.SourceOption`, the value from environment variable `SPIFFE_ENDPOINT_SOCKET` is used.
-	source, err := workloadapi.NewX509Source(ctx, workloadapi.WithClientOptions(workloadapi.WithAddr(args.SpireSocketPath)))
-	if err != nil {
-		return nil, fmt.Errorf("unable to create X509Source: %w", err)
-	}
-	defer util.MustClose(source)
 
 	tlsConfig := tlsconfig.TLSServerConfig(source)
 
