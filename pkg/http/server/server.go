@@ -56,12 +56,14 @@ func NewServer(args *HTTPServerArgs, logger klog.Logger) *HTTPServer {
 	return s
 }
 
-func (s *HTTPServer) Start(logger klog.Logger, errChan chan error) {
+func (s *HTTPServer) Start(logger klog.Logger, _ chan error) {
 	logger.Info("Server listening", "addr", s.server.Addr)
+	logger.V(1).Info("Using certificate", "cert", s.certFile, "key", s.keyFile)
+
 	err := s.server.ListenAndServeTLS(s.certFile, s.keyFile)
 	if err != nil && err != http.ErrServerClosed {
 		s.healthy.Store(false)
-		errChan <- err
+		// errChan <- err
 		return
 	}
 
