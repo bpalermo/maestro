@@ -2,14 +2,12 @@ package cmd
 
 import (
 	"context"
-	"flag"
 	"time"
 
 	"github.com/bpalermo/maestro/internal/core/shutdown"
 	"github.com/bpalermo/maestro/pkg/controller"
 	"github.com/bpalermo/maestro/pkg/http/server"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 	"k8s.io/klog/v2"
 )
 
@@ -28,9 +26,6 @@ var (
 )
 
 func init() {
-	klog.InitFlags(nil)
-	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
-
 	rootCmd.AddCommand(controllerCmd)
 
 	controllerCmd.Flags().StringVar(&controllerArgs.MasterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
