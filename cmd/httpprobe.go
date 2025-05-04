@@ -35,8 +35,6 @@ func init() {
 }
 
 func runHttpProbe(_ *cobra.Command, _ []string) {
-	klog.InitFlags(nil)
-
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 

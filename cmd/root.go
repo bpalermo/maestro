@@ -1,9 +1,12 @@
 package cmd
 
 import (
+	"flag"
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"k8s.io/klog/v2"
 )
 
 const (
@@ -26,5 +29,8 @@ func Execute() {
 }
 
 func init() {
+	klog.InitFlags(nil)
+	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
+
 	rootCmd.PersistentFlags().Bool(debugModeFlagName, false, "enable debug mode")
 }
