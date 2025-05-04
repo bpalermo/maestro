@@ -35,7 +35,7 @@ func init() {
 	controllerCmd.Flags().StringVar(&httpServerArgs.CertFile, "httpCertFile", "/var/maestro/certs/tls.crt", "HTTP server TLS certificate file path.")
 	controllerCmd.Flags().StringVar(&httpServerArgs.KeyFile, "httpKeyFile", "/var/maestro/certs/tls.key", "HTTP server TLS key file path.")
 
-	controllerCmd.Flags().DurationVar(&gracefulShutdownTimeout, "gracefulShutdownTimeout", 30, "Graceful shutdown timeout in seconds")
+	controllerCmd.Flags().DurationVar(&gracefulShutdownTimeout, "gracefulShutdownTimeout", 30*time.Second, "Graceful shutdown timeout in seconds")
 
 	controllerCmd.Flags().StringVar(&controllerArgs.ConfigMapPrefix, "configMapPrefix", "proxy-config-", "Prefix for proxy config config maps")
 	controllerCmd.Flags().StringVar(&controllerArgs.Spire.TrustDomain, "spireTrustDomain", "cluster.local", "Spire SPIFFE trust domain")
