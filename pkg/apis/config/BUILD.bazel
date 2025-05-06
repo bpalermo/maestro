@@ -5,5 +5,4 @@ go_library(
     srcs = ["register.go"],
     importpath = "github.com/bpalermo/maestro/pkg/apis/config",
     visibility = ["//visibility:public"],
-    deps = ["@io_k8s_apimachinery//pkg/runtime/schema"],
 )

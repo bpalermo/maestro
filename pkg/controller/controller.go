@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/bpalermo/maestro/internal/proxy"
-	"github.com/bpalermo/maestro/pkg/apis/config"
 	configv1 "github.com/bpalermo/maestro/pkg/apis/config/v1"
 	"golang.org/x/time/rate"
 	corev1 "k8s.io/api/core/v1"
@@ -139,7 +138,7 @@ func NewMaestroController(
 	dynamicInformerFactory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(maestroClient, time.Second*30, corev1.NamespaceAll, nil)
 
 	configMapInformer := kubeInformerFactory.Core().V1().ConfigMaps()
-	proxyConfigsInformer := dynamicInformerFactory.ForResource(config.ProxyConfigGroupVersionResource)
+	proxyConfigsInformer := dynamicInformerFactory.ForResource(configv1.ProxyConfigSchemaGVR)
 
 	// Create an event broadcaster
 	// Add maestro types to the default Kubernetes Scheme so Events can be
@@ -415,7 +414,7 @@ func (c *MaestroController) updateProxyConfigStatus(ctx context.Context, proxyCo
 	// we must use Update instead of UpdateStatus to update the Status block of the ProxyConfig resource.
 	// UpdateStatus will not allow changes to the Spec of the resource,
 	// which is ideal for ensuring nothing other than resource status has been updated.
-	_, err = c.dynamicClientSet.Resource(config.ProxyConfigGroupVersionResource).Namespace(proxyConfigU.GetNamespace()).UpdateStatus(ctx, proxyConfigU, metav1.UpdateOptions{FieldManager: FieldManager})
+	_, err = c.dynamicClientSet.Resource(configv1.ProxyConfigSchemaGVR).Namespace(proxyConfigU.GetNamespace()).UpdateStatus(ctx, proxyConfigU, metav1.UpdateOptions{FieldManager: FieldManager})
 	return err
 }
 
