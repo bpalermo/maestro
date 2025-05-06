@@ -2,8 +2,24 @@ package v1
 
 import (
 	configv1 "github.com/bpalermo/maestro/api/config/v1"
+	"github.com/bpalermo/maestro/pkg/apis/config"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+)
+
+var (
+	ProxyConfigSchemaGVR = schema.GroupVersionResource{
+		Group:    config.GroupName,
+		Version:  "v1",
+		Resource: "proxyconfigs",
+	}
+
+	ProxyConfigMetaGVR = metav1.GroupVersionResource{
+		Group:    config.GroupName,
+		Version:  "v1",
+		Resource: "proxyconfigs",
+	}
 )
 
 // ProxyConfig is a specification for a ProxyConfig resource

@@ -53,6 +53,7 @@ func (avh AdmissionValidationHandler) ServeHTTP(w http.ResponseWriter, r *http.R
 		Version: "v1",
 		Kind:    "AdmissionReview",
 	}
+
 	admissionReviewGVK, err := avh.decodeRequest(requestBody, expectedAdmissionReviewGVK, admissionReview)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -69,46 +70,25 @@ func (avh AdmissionValidationHandler) ServeHTTP(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	proxyConfigGVR := metav1.GroupVersionResource{
-		Group:    config.GroupName,
-		Version:  "v1",
-		Resource: "proxyconfigs",
-	}
-	if admissionReviewRequest.Resource != proxyConfigGVR {
-		errMsg := fmt.Sprintf("Expected config.maestro.io/v1/proxyconfig resource but got %+v", admissionReviewRequest)
-		slog.Error(errMsg)
-		http.Error(w, errMsg, http.StatusBadRequest)
-		return
-	}
-
-	proxyConfigRequest := new(configv1.ProxyConfig)
-	expectedProxyConfigGVK := schema.GroupVersionKind{
-		Group:   config.GroupName,
-		Version: "v1",
-		Kind:    "ProxyConfig",
-	}
-	if _, err = avh.decodeRequest(admissionReviewRequest.Object.Raw, expectedProxyConfigGVK, proxyConfigRequest); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
 	admissionReviewResponse := &admissionv1.AdmissionReview{
 		Response: &admissionv1.AdmissionResponse{
 			UID: admissionReviewRequest.UID,
 		},
 	}
 
-	err = protovalidate.Validate(proxyConfigRequest.Spec)
+	switch admissionReviewRequest.Resource {
+	case configv1.ProxyConfigMetaGVR:
+		err = avh.handleProxyConfigReviewRequest(admissionReviewGVK, admissionReviewRequest, admissionReviewResponse)
+	default:
+		errMsg := fmt.Sprintf("Expected config.maestro.io/v1/proxyconfig resource but got %+v", admissionReviewRequest)
+		slog.Error(errMsg)
+		http.Error(w, errMsg, http.StatusBadRequest)
+		return
+	}
 
-	admissionReviewResponse.SetGroupVersionKind(admissionReviewGVK)
 	if err != nil {
-		admissionReviewResponse.Response.Allowed = false
-		admissionReviewResponse.Response.Result = &metav1.Status{
-			Status:  "Failure",
-			Message: err.Error(),
-		}
-	} else {
-		admissionReviewResponse.Response.Allowed = true
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	respBytes, err := json.Marshal(admissionReviewResponse)
@@ -141,4 +121,31 @@ but got group: %s version: %s kind: %s`, expectedGVK.Group, expectedGVK.Version,
 		return schema.GroupVersionKind{}, errors.New(errMsg)
 	}
 	return *requestGVK, nil
+}
+
+func (avh AdmissionValidationHandler) handleProxyConfigReviewRequest(gvk schema.GroupVersionKind, request *admissionv1.AdmissionRequest, response *admissionv1.AdmissionReview) error {
+	proxyConfigRequest := new(configv1.ProxyConfig)
+	expectedProxyConfigGVK := schema.GroupVersionKind{
+		Group:   config.GroupName,
+		Version: "v1",
+		Kind:    "ProxyConfig",
+	}
+	if _, err := avh.decodeRequest(request.Object.Raw, expectedProxyConfigGVK, proxyConfigRequest); err != nil {
+		return err
+	}
+
+	err := protovalidate.Validate(proxyConfigRequest.Spec)
+
+	response.SetGroupVersionKind(gvk)
+	if err != nil {
+		response.Response.Allowed = false
+		response.Response.Result = &metav1.Status{
+			Status:  "Failure",
+			Message: err.Error(),
+		}
+	} else {
+		response.Response.Allowed = true
+	}
+
+	return nil
 }
