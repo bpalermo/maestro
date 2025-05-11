@@ -49,7 +49,18 @@ func NewServer(args *HTTPServerArgs, source *workloadapi.X509Source, logger klog
 	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
 	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
 
-	mux.Handle("/validate", handlers.NewAdmissionValidationHandler(logger))
+	validationHandler, err := handlers.NewAdmissionValidationHandler(logger)
+	if err != nil {
+		return nil, err
+	}
+
+	mux.Handle("/validate", handlers.NewAdmissionHandler(validationHandler, logger))
+
+	mutationHandler, err := handlers.NewAdmissionMutationHandler(logger)
+	if err != nil {
+		return nil, err
+	}
+	mux.Handle("/mutate", handlers.NewAdmissionHandler(mutationHandler, logger))
 
 	mux.HandleFunc("GET /-/-/liveness", s.livenessHandler)
 	mux.HandleFunc("GET /-/-/readiness", s.readinessHandler)
