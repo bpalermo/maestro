@@ -1,0 +1,13 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "config",
+    srcs = ["sidecar.go"],
+    importpath = "github.com/bpalermo/maestro/internal/config",
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//internal/config/annotation:annotations",
+        "//internal/config/constants",
+        "@io_k8s_api//core/v1:core",
+    ],
+)

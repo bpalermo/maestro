@@ -2,7 +2,10 @@ load("@rules_go//go:def.bzl", "go_library")
 
 go_library(
     name = "constants",
-    srcs = ["cluster.go"],
+    srcs = [
+        "cluster.go",
+        "spiffe.go",
+    ],
     importpath = "github.com/bpalermo/maestro/internal/config/constants",
     visibility = ["//:__subpackages__"],
     deps = ["//internal/types"],
