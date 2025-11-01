@@ -2,7 +2,11 @@ load("@rules_go//go:def.bzl", "go_library")
 
 go_library(
     name = "types",
-    srcs = ["cluster.go"],
+    srcs = [
+        "cluster.go",
+        "endpoint.go",
+        "service.go",
+    ],
     importpath = "github.com/bpalermo/maestro/internal/types",
     visibility = ["//:__subpackages__"],
 )

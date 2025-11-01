@@ -1,4 +1,4 @@
-load("@rules_go//go:def.bzl", "go_library")
+load("@rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "shutdown",
@@ -6,4 +6,15 @@ go_library(
     importpath = "github.com/bpalermo/maestro/internal/core/shutdown",
     visibility = ["//:__subpackages__"],
     deps = ["@io_k8s_klog_v2//:klog"],
+)
+
+go_test(
+    name = "shutdown_test",
+    srcs = ["shutdown_test.go"],
+    embed = [":shutdown"],
+    deps = [
+        "@com_github_stretchr_testify//assert",
+        "@com_github_stretchr_testify//require",
+        "@io_k8s_klog_v2//:klog",
+    ],
 )

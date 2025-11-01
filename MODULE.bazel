@@ -3,12 +3,12 @@ module(
     version = "1.0.0",
 )
 
-bazel_dep(name = "aspect_bazel_lib", version = "2.10.0")
+bazel_dep(name = "aspect_bazel_lib", version = "2.21.2")
 bazel_dep(name = "rules_go", version = "0.58.3")
 bazel_dep(name = "protobuf", version = "33.0")
 bazel_dep(name = "rules_buf", version = "0.5.2")
 bazel_dep(name = "rules_oci", version = "2.2.6")
-bazel_dep(name = "container_structure_test", version = "1.19.1")
+bazel_dep(name = "container_structure_test", version = "1.21.1")
 bazel_dep(name = "rules_pkg", version = "1.0.1")
 
 # upgrading breaks build
@@ -20,7 +20,6 @@ go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
 # Download an SDK for the host OS & architecture as well as common remote execution
 # platforms, using the version given from the `go.mod` file.
 go_sdk.from_file(go_mod = "//:go.mod")
-go_sdk.download(version = "1.24.9")
 
 go_deps = use_extension("@gazelle//:extensions.bzl", "go_deps")
 go_deps.from_file(go_mod = "//:go.mod")
@@ -38,15 +37,19 @@ use_repo(
     "com_github_envoyproxy_go_control_plane_envoy",
     "com_github_fxamacker_cbor_v2",
     "com_github_go_jose_go_jose_v4",
+    "com_github_go_logr_zapr",
     "com_github_go_openapi_jsonreference",
     "com_github_go_openapi_swag",
     "com_github_golang_protobuf",
+    "com_github_google_cel_go",
     "com_github_google_gnostic_models",
     "com_github_google_uuid",
     "com_github_munnerz_goautoneg",
     "com_github_spf13_cobra",
     "com_github_spf13_pflag",
     "com_github_spiffe_go_spiffe_v2",
+    "com_github_stretchr_testify",
+    "dev_cel_expr",
     "in_gopkg_evanphx_json_patch_v4",
     "io_istio_tools",
     "io_k8s_api",
@@ -54,6 +57,7 @@ use_repo(
     "io_k8s_client_go",
     "io_k8s_klog_v2",
     "io_k8s_kube_openapi",
+    "io_k8s_sigs_controller_runtime",
     "io_k8s_sigs_json",
     "io_k8s_sigs_structured_merge_diff_v4",
     "io_k8s_utils",
@@ -65,6 +69,7 @@ use_repo(
     "org_golang_x_term",
     "org_golang_x_time",
     "org_uber_go_atomic",
+    "org_uber_go_zap",
 )
 
 buf = use_extension("@rules_buf//buf:extensions.bzl", "buf")

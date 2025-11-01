@@ -1,0 +1,14 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "manager",
+    srcs = ["base.go"],
+    importpath = "github.com/bpalermo/maestro/pkg/manager",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@io_k8s_sigs_controller_runtime//pkg/client/config",
+        "@io_k8s_sigs_controller_runtime//pkg/healthz",
+        "@io_k8s_sigs_controller_runtime//pkg/manager",
+        "@io_k8s_sigs_controller_runtime//pkg/metrics/server",
+    ],
+)
