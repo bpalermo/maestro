@@ -11,7 +11,7 @@ go_library(
     importpath = "github.com/bpalermo/maestro/internal/proxy",
     visibility = ["//:__subpackages__"],
     deps = [
-        "//api/maestro/config/v1:maestro_config_v1_go_proto",
+        "//api/maestro/config/v1:configv1_go_proto",
         "//internal/config/constants",
         "//internal/proxy/envoy",
         "//internal/util",

@@ -25,3 +25,7 @@ push-image:
 .PHONY: run-agent
 run-agent:
 	@bazel run //maestro-agent/cmd/server
+
+.PHONY: clean
+clean:
+	@bazel clean --expunge

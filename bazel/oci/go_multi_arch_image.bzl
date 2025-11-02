@@ -1,10 +1,10 @@
 load("@aspect_bazel_lib//lib:testing.bzl", "assert_archive_contains")
 load("@container_structure_test//:defs.bzl", "container_structure_test")
-load("@rules_pkg//:pkg.bzl", "pkg_tar")
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_image_index", "oci_load", "oci_push")
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
 load("//bazel/oci:transition.bzl", "multi_arch")
 
-def go_multi_arch_image(name, binary, repository, base = "@distroless_base", container_test_configs = ["testdata/container_test.yaml"], tars = [], **kwargs):
+def go_multi_arch_image(name, binary, repository, base = "@distroless_static", container_test_configs = ["testdata/container_test.yaml"], tars = [], **kwargs):
     """
     Creates a containerized binary from Go sources.
     Parameters:
@@ -33,7 +33,7 @@ def go_multi_arch_image(name, binary, repository, base = "@distroless_base", con
 
     oci_image(
         name = "image",
-        base = "@distroless_base",
+        base = base,
         entrypoint = ["/{}".format(binary_name)],
         tars = [":layer"],
         visibility = ["//visibility:private"],
