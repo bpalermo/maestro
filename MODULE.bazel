@@ -4,28 +4,23 @@ module(
 )
 
 bazel_dep(name = "aspect_bazel_lib", version = "2.10.0")
-bazel_dep(name = "rules_go", version = "0.54.0")
-
-bazel_dep(name = "gazelle", version = "0.43.0", dev_dependency = True)
-
-bazel_dep(name = "rules_buf", version = "0.3.0")
-bazel_dep(name = "rules_proto", version = "7.1.0")
-bazel_dep(name = "rules_oci", version = "2.2.0")
+bazel_dep(name = "rules_go", version = "0.58.3")
+bazel_dep(name = "protobuf", version = "33.0")
+bazel_dep(name = "rules_buf", version = "0.5.2")
+bazel_dep(name = "rules_oci", version = "2.2.6")
 bazel_dep(name = "container_structure_test", version = "1.19.1")
 bazel_dep(name = "rules_pkg", version = "1.0.1")
 
+# upgrading breaks build
+bazel_dep(name = "gazelle", version = "0.43.0", dev_dependency = True)
+bazel_dep(name = "protovalidate", version = "1.0.0", dev_dependency = True)
+
 go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
-go_sdk.nogo(
-    includes = [
-        "//:__subpackages__",
-    ],
-    nogo = "//:nogo",
-)
 
 # Download an SDK for the host OS & architecture as well as common remote execution
 # platforms, using the version given from the `go.mod` file.
 go_sdk.from_file(go_mod = "//:go.mod")
-go_sdk.download(version = "1.24.2")
+go_sdk.download(version = "1.24.9")
 
 go_deps = use_extension("@gazelle//:extensions.bzl", "go_deps")
 go_deps.from_file(go_mod = "//:go.mod")
@@ -73,28 +68,25 @@ use_repo(
 )
 
 buf = use_extension("@rules_buf//buf:extensions.bzl", "buf")
-buf.dependency(module = "buf.build/bufbuild/protovalidate:0409229c37804d6187ee0806eb4eebce")
 
 # Override the default version of buf
 buf.toolchains(
-    sha256 = "8015e680412dddbb49471320abf9e5cc4091b836a17ee01a0e21c2427e5ec7c6",
-    version = "v1.52.1",
+    sha256 = "a1338fb6f5c4e6663f1b0b49d841a85b26b7ea1266e02aa24537134d101c597f",
+    version = "v1.59.0",
 )
-
-# Allow references to labels under @buf_deps
-use_repo(buf, "buf_deps")
 
 # Allow people to use `bazel run @rules_buf_toolchains//:buf -- --version`
 use_repo(buf, "rules_buf_toolchains")
 
 oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
 oci.pull(
-    name = "distroless_base",
-    digest = "sha256:6d4a4f40e93615df1677463ca56456379cc3a4e2359308c9e72bc60ffc4a12a9",
-    image = "gcr.io/distroless/base",
+    name = "distroless_static",
+    digest = "sha256:e8a4044e0b4ae4257efa45fc026c0bc30ad320d43bd4c1a7d5271bd241e386d0",
+    image = "gcr.io/distroless/static-debian12",
     platforms = [
         "linux/amd64",
         "linux/arm64/v8",
     ],
+    tag = "nonroot",
 )
-use_repo(oci, "distroless_base", "distroless_base_linux_amd64", "distroless_base_linux_arm64_v8")
+use_repo(oci, "distroless_static", "distroless_static_linux_amd64", "distroless_static_linux_arm64_v8")

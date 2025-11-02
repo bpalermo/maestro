@@ -1,8 +1,6 @@
 module github.com/bpalermo/maestro
 
-go 1.24.0
-
-toolchain go1.24.2
+go 1.24.9
 
 require github.com/spf13/cobra v1.9.1
 
@@ -58,7 +56,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822
-	github.com/spf13/pflag v1.0.6
+	github.com/spf13/pflag v1.0.10
 	github.com/spiffe/go-spiffe/v2 v2.5.0
 	go.uber.org/atomic v1.11.0
 	golang.org/x/net v0.39.0
@@ -68,7 +66,7 @@ require (
 	golang.org/x/text v0.24.0 // indirect
 	golang.org/x/time v0.11.0
 	google.golang.org/grpc v1.72.0
-	google.golang.org/protobuf v1.36.6
+	google.golang.org/protobuf v1.36.8
 	gopkg.in/evanphx/json-patch.v4 v4.12.0
 	istio.io/tools v0.0.0-20250425075802-eb37ce9010c8
 	k8s.io/api v0.33.0
