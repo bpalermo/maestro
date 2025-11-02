@@ -24,4 +24,4 @@ multi_arch = rule(
             default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
         ),
     },
-)
+)   

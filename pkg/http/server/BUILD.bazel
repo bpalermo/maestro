@@ -1,4 +1,4 @@
-load("@rules_go//go:def.bzl", "go_library")
+load("@rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "server",
@@ -10,6 +10,16 @@ go_library(
         "@com_github_spiffe_go_spiffe_v2//spiffetls/tlsconfig",
         "@com_github_spiffe_go_spiffe_v2//workloadapi",
         "@io_k8s_klog_v2//:klog",
+        "@org_uber_go_atomic//:atomic",
+    ],
+)
+
+go_test(
+    name = "server_test",
+    srcs = ["server_test.go"],
+    embed = [":server"],
+    deps = [
+        "@com_github_stretchr_testify//assert",
         "@org_uber_go_atomic//:atomic",
     ],
 )

@@ -273,7 +273,7 @@ func (c *MaestroController) processNextWorkItem(ctx context.Context) bool {
 		return false
 	}
 
-	// We call Done at the end of this func so the workqueue knows we have
+	// We call Done at the end of this func, so the workqueue knows we have
 	// finished processing this item. We also must remember to call Forget
 	// if we do not want this work item being re-queued. For example, we do
 	// not call Forget if a transient error occurs, instead the item is
@@ -345,7 +345,7 @@ func (c *MaestroController) syncHandler(ctx context.Context, objectRef cache.Obj
 	}
 
 	// If an error occurs during Get/Create, we'll requeue the item so we can
-	// attempt processing again later. This could have been caused by a
+	// attempt to process again later. This could have been caused by a
 	// temporary network failure, or, any other transient reason.
 	if err != nil {
 		return err
@@ -369,7 +369,7 @@ func (c *MaestroController) syncHandler(ctx context.Context, objectRef cache.Obj
 	}
 
 	// If an error occurs during updating, we'll requeue the item so we can
-	// attempt processing again later. This could have been caused by a
+	// attempt to process again later. This could have been caused by a
 	// temporary network failure, or, any other transient reason.
 	if err != nil {
 		return err
